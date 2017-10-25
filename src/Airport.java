@@ -1,17 +1,5 @@
-import java.util.List;
-
-/*SON LOS NODOS CLASE STATIC DENTRO DE FLIGHTASSISTANT*/
-public interface Airport {
-
-    String getName();
-
-    double getLatitude();
-
-    double getLongitude();
-
-    List<Flight> getFlights();
-
-
-
-
+/**
+ * Created by sswinnen on 25/10/17.
+ */
+public class Airport implements AirportInterface {
 }
