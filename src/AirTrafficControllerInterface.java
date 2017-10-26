@@ -4,28 +4,28 @@ import java.util.List;
 public interface AirTrafficControllerInterface {
 
 
-    boolean insertFlight(String airline, Integer number, Airport origin, Airport destination, List<Integer> departureDays, Integer duration, Integer departureTime, double price);
+    boolean insertFlight(String airline, Integer number, AirTrafficController.Airport origin, AirTrafficController.Airport destination, List<Integer> departureDays, Integer duration, Integer departureTime, double price);
     boolean insertAirport(String name, double latitude, double longitude);
 
     boolean deleteAirport(String name);
     boolean deleteFlight(String airlineName, Integer Number);
 
-    boolean insertAllAirports(List<Airport> airports);
-    boolean deleteAllAirports();
-    boolean replaceAllAirports(List<Airport> airport);
+    void insertAllAirports(List<AirTrafficController.Airport> airports);
+    void deleteAllAirports();
+    void replaceAllAirports(List<AirTrafficController.Airport> airport);
 
 
-    boolean insertAllFlights(List<Flight> flights);
-    boolean deleteAllFlights();
-    boolean replaceAllFlights(List<Airport> flights);
+    void insertAllFlights(List<AirTrafficController.Flight> flights);
+    void deleteAllFlights();
+    void replaceAllFlights(List<AirTrafficController.Flight> flights);
 
 
 
-    List<Flight> findRouteMinFlightTime(Airport origin, Airport destiny, List<Integer> departureDays);
-    List<Flight> findRouteMinPrice(Airport origin, Airport destiny, List<Integer> departureDays);
-    List<Flight> findRouteMinTotalTime(Airport origin, Airport destiny, List<Integer> departureDays);
+    List<AirTrafficController.Flight> findRouteMinFlightTime(AirTrafficController.Airport origin, AirTrafficController.Airport destiny, List<Integer> departureDays);
+    List<AirTrafficController.Flight> findRouteMinPrice(AirTrafficController.Airport origin, AirTrafficController.Airport destiny, List<Integer> departureDays);
+    List<AirTrafficController.Flight> findRouteMinTotalTime(AirTrafficController.Airport origin, AirTrafficController.Airport destiny, List<Integer> departureDays);
 
-    List<Flight> worldTripMinFlightTime();
-    List<Flight> worldTripMinPrice();
-    List<Flight> worldTripMinTotalTime();
+    List<AirTrafficController.Flight> worldTripMinFlightTime();
+    List<AirTrafficController.Flight> worldTripMinPrice();
+    List<AirTrafficController.Flight> worldTripMinTotalTime();
 }
