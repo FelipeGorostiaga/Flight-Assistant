@@ -6,7 +6,7 @@ public class AirTrafficController implements AirTrafficControllerInterface{
 
     private List<Airport> airports;
 
-    private class Airport {
+    private class Airport implements AirportInterface{
 
         private String name;
         private double lat;
@@ -14,7 +14,7 @@ public class AirTrafficController implements AirTrafficControllerInterface{
         private List<Flight> flights;
     }
 
-    private class Flight {
+    private class Flight implments FlightInterface{
 
         private String name;
         private Integer num;
