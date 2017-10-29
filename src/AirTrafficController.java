@@ -1,8 +1,5 @@
 import java.sql.Time;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 
 public class AirTrafficController implements AirTrafficControllerInterface{
@@ -115,17 +112,61 @@ public class AirTrafficController implements AirTrafficControllerInterface{
 
     }
 
-    public List<Flight> findRouteMinFlightTime(Airport origin, Airport destiny, List<Integer> departureDays) {
+    public List<Flight> findRouteMinFlightTime(Airport origin, Airport destination, List<Integer> departureDays) {
+        List<Flight> route = new LinkedList<>();
+        PriorityQueue<PQNode> pq = new PriorityQueue<>();
+        clearMarks();
+
+        while(!pq.isEmpty()){
+            PQNode pqnode = pq.poll();
+
+            if(!pqnode.airport.visited){
+                route.add(pqnode.arrival);
+                pqnode.airport.visited = true;
+                if(pqnode.airport.equals(destination)){
+                    return route;
+                }
+                for(Flight flight : pqnode.airport.flightList){
+                    if(!flight.destination.visited){
+                        pq.offer(new PQNode(flight, flight.destination, pqnode.distance + flight.duration));
+                    }
+                }
+
+            }
+        }
         return null;
     }
 
-    public List<Flight> findRouteMinPrice(Airport origin, Airport destiny, List<Integer> departureDays) {
+    public List<Flight> findRouteMinPrice(Airport origin, Airport destination, List<Integer> departureDays) {
+        List<Flight> route = new LinkedList<>();
+        PriorityQueue<PQNode> pq = new PriorityQueue<>();
+        clearMarks();
+
+        while(!pq.isEmpty()){
+            PQNode pqnode = pq.poll();
+
+            if(!pqnode.airport.visited){
+                route.add(pqnode.arrival);
+                pqnode.airport.visited = true;
+                if(pqnode.airport.equals(destination)){
+                    return route;
+                }
+                for(Flight flight : pqnode.airport.flightList){
+                    if(!flight.destination.visited){
+                        pq.offer(new PQNode(flight, flight.destination, pqnode.distance + flight.price));
+                    }
+                }
+
+            }
+        }
         return null;
     }
 
-    public List<Flight> findRouteMinTotalTime(Airport origin, Airport destiny, List<Integer> departureDays) {
+    public List<Flight> findRouteMinTotalTime(Airport origin, Airport destination, List<Integer> departureDays) {
         return null;
     }
+
+
 
     public List<Flight> worldTripMinFlightTime() {
         return null;
@@ -204,7 +245,7 @@ public class AirTrafficController implements AirTrafficControllerInterface{
 
 
 
-    protected class Flight implements FlightInterface{
+    protected class Flight implements FlightInterface {
 
         private String airline;
         private Integer number;
@@ -268,6 +309,22 @@ public class AirTrafficController implements AirTrafficControllerInterface{
 
         public double getPrice() {
             return price;
+        }
+    }
+
+    private class PQNode implements Comparable<PQNode> {
+        Flight arrival;
+        Airport airport;
+        double distance;
+
+        public PQNode(Flight arrival, Airport airport, double distance) {
+            this.arrival = arrival;
+            this.airport = airport;
+            this.distance = distance;
+        }
+
+        public int compareTo(PQNode o) {
+            return Double.valueOf(distance).compareTo(o.distance);
         }
     }
 
