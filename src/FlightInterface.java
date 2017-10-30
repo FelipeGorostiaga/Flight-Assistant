@@ -1,4 +1,5 @@
 
+import java.util.HashSet;
 import java.util.List;
 
 /*SON LAS ARISTAS CLASE STATIC DENTRO DE FLIGHT ASSISTANTE*/

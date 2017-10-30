@@ -1,3 +1,4 @@
+import java.util.HashSet;
 import java.util.List;
 
 /*GUARDA EL GRAFO DE LISTA DE ADYACENCIA (DIGRAFO)*/
