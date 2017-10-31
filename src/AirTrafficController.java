@@ -12,8 +12,8 @@ public class AirTrafficController implements AirTrafficControllerInterface{
     private HashMap<String,Airport> airports = new HashMap<>();
 
     public boolean insertFlight(String airline, Integer number, Airport origin, Airport destination, List<Integer> departureDays, Integer duration, Integer departureTime, double price) {
-        Airport start = airports.get(origin);
-        Airport end = airports.get(destination);
+        Airport start = airports.get(origin.name);
+        Airport end = airports.get(destination.name);
         if(start != null && end != null && !start.equals(end)){
             if(start.flights.containsKey(airline + number)){
                 return false;
