@@ -1,14 +1,19 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
  *  @author Santiago Swinnen
+ *  The Terminal class has an array of strings. Each time a valid word is read, the string is added to the array.
+ *  If the user input gets to the point when the action is executed, array elements are passed as arguments.
+ *  When the while statement starts again it clears the array
  */
 
 public class Terminal {
 
     private AirTrafficController atc;
+    private ArrayList<String> words;
 
     public Terminal() {
         this.atc = new AirTrafficController();
@@ -21,6 +26,7 @@ public class Terminal {
         String input;
         boolean exit = false;
         while(!exit) {
+            words.clear();
             input = scanner.nextLine();
             if(input.equals("exit")){
                 exit = true;
@@ -39,6 +45,7 @@ public class Terminal {
         char[] chars = instruction.toCharArray();
         int i = 0;
         String action = getStringUntilChar(chars, i, ' ');
+        words.add(action);
         i += action.length() + 1;
         if(action.equals("insert")) {
             checkInsertion(chars, i);
@@ -60,6 +67,7 @@ public class Terminal {
      */
     private void checkInsertion(char [] chars, int i) {
         String secondWord = getStringUntilChar(chars, i, ' ');
+        words.add(secondWord);
         i += secondWord.length() + 1;
         if(secondWord.equals("airport")) {
             newAirportValidation(chars, i);
@@ -67,7 +75,8 @@ public class Terminal {
             newFlightValidation(chars, i);
         } else if(secondWord.equals("all")) {
             String thirdWord = getStringUntilChar(chars,i,' ');
-            i += secondWord.length() + 1;
+            i += thirdWord.length() + 1;
+            words.add(thirdWord);
             if (thirdWord.equals("airports")) {
                 allAirportsValidation(chars, i);
             } else if(thirdWord.equals("flights")) {
@@ -88,7 +97,15 @@ public class Terminal {
      * @param i current index of char array
      */
     private void newAirportValidation(char[] chars, int i) {
-        //To be implemented
+        String airport = getStringUntilChar(chars, i, '\0');
+        i += airport.length() + 1;
+        if(airportNameIsValid(airport)) {
+            checkCoordinates(chars, i);
+        }
+    }
+
+    private void checkCoordinates(char[] chars, int i) {
+
     }
 
     /**
@@ -128,10 +145,12 @@ public class Terminal {
     private void checkDeletion(char [] chars, int i) {
         String secondWord = getStringUntilChar(chars, i, ' ');
         i += secondWord.length() + 1;
+        words.add(secondWord);
         if(secondWord.equals("airport")) {
-            String airport = getStringUntilChar(chars, i, ' ');
+            String airport = getStringUntilChar(chars, i, '\0');
             i += airport.length() + 1;
-            if(airportNameisValid(airport)) {
+            words.add(airport);
+            if(airportNameIsValid(airport)) {
                 deleteAirport(airport);
             } else {
                 System.out.println("Airport names should contain exactly three alphabetic characters");
@@ -142,8 +161,12 @@ public class Terminal {
                 deleteFlight(flight);
             }
         } else if(secondWord.equals("all")) {
-            String thirdWord = getStringUntilChar(chars, i, ' ');
-            i += secondWord.length() + 1;
+            String thirdWord = getStringUntilChar(chars, i, '\0');
+            if(thirdWord.equals("airport")) {
+                atc.deleteAllAirports();
+            } else if(thirdWord.equals("flight")) {
+                atc.deleteAllFlights();
+            }
         }
     }
 
@@ -157,12 +180,30 @@ public class Terminal {
 
     }
 
+    private void deleteAllFlights() {
+
+    }
+
     /**
-     * if the first word of user input is "checkRoute", this method is called for further checking
+     * if the first word of user input is "findRoute", this method is called for further checking
      * @param chars user input
      * @param i current index of char array
      */
     private void checkRoute(char [] chars, int i) {
+        String origin = getStringUntilChar(chars, i, ' ');
+        i += origin.length() + 1;
+        words.add(origin);
+        String destination = getStringUntilChar(chars, i, ' ');
+        i += origin.length() + 1;
+        words.add(destination);
+        if(airportNameIsValid(origin) && airportNameIsValid(destination)) {
+            routePriorityCheck(chars, i);
+        } else {
+            System.out.println("Invalid origin and destination airports. Unable to find route");
+        }
+    }
+
+    private void checkWeekDays(char[] chars, int i) {
 
     }
 
@@ -172,10 +213,27 @@ public class Terminal {
      * @param i current index of char array
      */
     private void checkWorldTrip(char [] chars, int i) {
-
+        String airport = getStringUntilChar(chars, i, ' ');
+        i += airport.length() + 1;
+        words.add(airport);
+        if(airportNameIsValid(airport)) {
+            routePriorityCheck(chars, i);
+        }
     }
 
 
+    /**
+     * Multipurpose assistant methods
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     */
 
     private static String getStringUntilChar(char[] arr, int i, char end) {
         String ret = new String();
@@ -185,7 +243,7 @@ public class Terminal {
         }
         return ret;
     }
-    private boolean airportNameisValid(String airport) {
+    private boolean airportNameIsValid(String airport) {
         boolean allLetters = true;
         char [] airportChars =airport.toCharArray();
         for (int j = 0; j <= airportChars.length; j++) {
@@ -208,5 +266,22 @@ public class Terminal {
     private boolean flightIsValid(String flight) {
         //To be implemented
         return true;
+    }
+
+    /**
+     * Ohecks if priority input for a route is valid.
+     * @param chars user input
+     * @param i array index
+     */
+
+    private void routePriorityCheck(char[] chars, int i) {
+        String priority = getStringUntilChar(chars, i, ' ');
+        i += priority.length() + 1;
+        words.add(priority);
+        if(priority.equals("ft") || priority.equals("tt") || priority.equals("pr")) {
+            checkWeekDays(chars, i);
+        } else {
+            System.out.println("Invalid priority parameter");
+        }
     }
 }
