@@ -49,7 +49,7 @@ public class Terminal {
         } else if(action.equals("worldTrip")) {
             checkWorldTrip(chars, i);
         } else {
-            System.out.println("Invalid instruction, please try again");
+            System.out.println("Invalid command, please try again");
         }
     }
 
