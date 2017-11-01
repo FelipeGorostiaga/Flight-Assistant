@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 /**
  *  @author Santiago Swinnen
@@ -162,7 +163,11 @@ public class Terminal {
             if(valid) {
                 words.add(flightNumber);
                 newFlightSecondCheck(chars, i);
+            } else {
+                System.out.println("Invalid flight number");
             }
+        } else {
+            System.out.println("Invalid airline name");
         }
     }
 
@@ -187,28 +192,38 @@ public class Terminal {
                 String depTime = getStringUntilChar(chars, i, ' ');
                 i += depTime.length() + 1;
                 valid = isADayTime(depTime);
-                if(valid) {
+                if (valid) {
                     String duration = getStringUntilChar(chars, i, ' ');
                     i += duration.length() + 1;
                     String price = getStringUntilChar(chars, i, '\0');
                     double priceDouble = 0.0;
-                    if(valid) {
+                    if (valid) {
                         try {
                             priceDouble = Double.parseDouble(price);
                         } catch (NumberFormatException e) {
                             valid = false;
                         }
-                        valid = valid && validDuration(duration) && validPrice(priceDouble);
-                        if(valid) {
-
-                            atc.receiveFlightInsertion((String)words.get(1),(Integer)words.get(2),dayList,
-                                    origin, destination, depTime, duration, priceDouble);
+                        int time = durationInMinutes(duration);
+                        valid = valid && durationInMinutes(duration) != -1 && validPrice(priceDouble);
+                        if (valid) {
+                            atc.receiveFlightInsertion((String) words.get(1), (Integer) words.get(2), dayList,
+                                    origin, destination, depTime, time, priceDouble);
+                        } else {
+                            System.out.println("Invalid parameters for flight insertion");
                         }
-
+                    } else {
+                        System.out.println("Invalid parameters for flight insertion");
                     }
+                } else {
+                    System.out.println("Invalid parameters for flight insertion");
                 }
+            } else {
+                System.out.println("Invalid parameters for flight insertion");
             }
+        } else {
+            System.out.println("Invalid parameters for flight insertion");
         }
+
     }
 
     /**
@@ -523,17 +538,75 @@ public class Terminal {
     }
 
     private boolean isADayTime(String date) {
-        return true;
-        //To be implemented
+        if(Pattern.matches("^[0-2][0-3]h:[0-5][0-9]m$",date)){
+            return true;
+        }
+        return false;
     }
 
-    private boolean validDuration(String duration) {
-        return true;
-        //To be implemented
+    /**
+     * Tests if duration format is valid. If so, returns total amount of miutes
+     * state: 0 -> no number read
+     *        1 -> one number read
+     *        2 -> two numbers read
+     * @param duration
+     * @return
+     */
+
+    private int durationInMinutes(String duration) {
+        int state = 0;
+        int minutes = 0;
+        int firstDigit = -1;
+        int secondDigit = -1;
+        boolean hoursRead = false;
+        for(int i = 0; i<duration.length(); i++) {
+            char current = duration.charAt(i);
+            if(state == 0) {
+                if(Character.isDigit(current)) {
+                    firstDigit = Character.getNumericValue(current);
+                    state = 1;
+                }
+                else {
+                    return -1;
+                }
+            }
+            if(state == 1) {
+                if(Character.isDigit(current)) {
+                    secondDigit = Character.getNumericValue(current);
+                    state = 2;
+                } else if(current == 'h' && !hoursRead) {
+                    hoursRead = true;
+                    minutes = buildMinutes(0, firstDigit, 60);
+                    state = 0;
+                } else {
+                    return -1;
+                }
+            }
+            if(state == 2) {
+                if(current == 'h' && !hoursRead) {
+                    hoursRead = true;
+                    minutes = buildMinutes(firstDigit, secondDigit, 60);
+                    state =0;
+                } else if(current == 'm' && i == duration.length() - 1 && firstDigit < 6) {
+                    minutes += buildMinutes(firstDigit, secondDigit, 1);
+                } else {
+                    return -1;
+                }
+            }
+        }
+        return minutes;
+    }
+
+    private int buildMinutes(int first, int second, int factor) {
+        return factor*(second + first * 10);
     }
 
     private boolean validPrice(Double price) {
-        return true;
-        //To be implemented
+        Double fractionPart = price - price.longValue();
+        int decimalDigits = fractionPart.toString().length() - 2;
+        if(decimalDigits == 2 && price >= 0.0) {
+            return true;
+        }
+        return false;
     }
 }

@@ -42,7 +42,7 @@ public interface AirTrafficControllerInterface {
      * @return String inicating whether the insertion could be done or not
      */
     String receiveFlightInsertion(String airline, int flightNum, List<Integer> weekDays, String origin, String destination,
-                           String departureTime, String duration, double price);
+                           String departureTime, int duration, double price);
 
     /**
      * Receives 'findRoute' instruction with params form terminal
