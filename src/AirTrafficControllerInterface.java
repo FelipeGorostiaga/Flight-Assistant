@@ -21,7 +21,6 @@ public interface AirTrafficControllerInterface {
     void replaceAllFlights(List<AirTrafficController.Flight> flights);
 
 
-
     List<AirTrafficController.Flight> findRouteMinFlightTime(AirTrafficController.Airport origin, AirTrafficController.Airport destiny, List<Integer> departureDays);
     List<AirTrafficController.Flight> findRouteMinPrice(AirTrafficController.Airport origin, AirTrafficController.Airport destiny, List<Integer> departureDays);
     List<AirTrafficController.Flight> findRouteMinTotalTime(AirTrafficController.Airport origin, AirTrafficController.Airport destiny, List<Integer> departureDays);
@@ -29,4 +28,25 @@ public interface AirTrafficControllerInterface {
     List<AirTrafficController.Flight> worldTripMinFlightTime();
     List<AirTrafficController.Flight> worldTripMinPrice();
     List<AirTrafficController.Flight> worldTripMinTotalTime();
+
+    /**
+     * Receives 'findRoute' instruction with params form terminal
+     * @param origin orig airport string
+     * @param destination dest airport string
+     * @param priority priority string
+     * @param weekDays List of integers representing days
+     * @return String representing whether rhe action could be performed of not.
+     * Terminal will print whatever it gets
+     */
+    String receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays);
+
+    /**
+     * Receives 'worldTrip' instruction from terminal and calls the right method according to the priority
+     * @param origin origin airport
+     * @param priority priority chosen by user
+     * @param weekDays List of integers representing days
+     * @return String representing whether rhe action could be performed of not.
+     * Terminal will print whatever it gets
+     */
+    String receiveWorldTrip(String origin, String priority, List<Integer> weekDays);
 }
