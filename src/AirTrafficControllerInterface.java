@@ -30,6 +30,21 @@ public interface AirTrafficControllerInterface {
     List<AirTrafficController.Flight> worldTripMinTotalTime();
 
     /**
+     * Receives flight insert instruccion from terminal
+     * @param airline
+     * @param flightNum
+     * @param weekDays
+     * @param origin
+     * @param destination
+     * @param departureTime
+     * @param duration
+     * @param price
+     * @return String inicating whether the insertion could be done or not
+     */
+    String receiveFlightInsertion(String airline, int flightNum, List<Integer> weekDays, String origin, String destination,
+                           String departureTime, String duration, double price);
+
+    /**
      * Receives 'findRoute' instruction with params form terminal
      * @param origin orig airport string
      * @param destination dest airport string

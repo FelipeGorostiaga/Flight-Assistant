@@ -1,6 +1,4 @@
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,7 +41,7 @@ public class Terminal {
 
     /**
      * Reads user input word by word. In case an instruction is read it is executed, otherwise no action is performed
-     * @param instruction string input to be analized
+     * @param instruction string input to be analyzed
      */
 
     private void readInstruction(String instruction) {
@@ -108,7 +106,7 @@ public class Terminal {
         }
     }
 
-    private void checkCoordinates(char[] chars, int i) {
+    private boolean checkCoordinates(char[] chars, int i) {
         String lat = getStringUntilChar(chars, i, ' ');
         boolean valid = true;
         Double latitude = 0.0;
@@ -124,7 +122,6 @@ public class Terminal {
             System.out.println("Latitude is out of range. It must be a real number between -90 and 90)");
         }
         if(valid) {
-            words.add(latitude);
             String lng = getStringUntilChar(chars, i, '\0');
             try {
                 longitude = Double.parseDouble(lng);
@@ -135,10 +132,11 @@ public class Terminal {
             if(valid && (longitude < -180.0 || longitude > 180.0)) {
                 System.out.println("Longitude is out of range. It must be a real number between -180 and 180)");
             } else {
-                words.add(longitude);
-                atc.insertAirport((String)words.get(2),(Double)words.get(3),(Double)words.get(4));
+                atc.insertAirport((String)words.get(2),latitude,longitude);
+                return true;
             }
         }
+        return false;
     }
 
 
@@ -163,12 +161,51 @@ public class Terminal {
             }
             if(valid) {
                 words.add(flightNumber);
-                String days = getStringUntilChar(chars, i, ' ');
-                i += days.length() + 1;
-                ArrayList<Integer> dayList = checkWeekDays(days);
-                if(dayList != null) {
-                    words.add(dayList);
-                    //To be continued
+                newFlightSecondCheck(chars, i);
+            }
+        }
+    }
+
+    /**
+     * This method is called only if three first airport insertion parameters are valid
+     * @param chars input
+     */
+
+    private void newFlightSecondCheck(char[] chars, int i) {
+        boolean valid;
+        String days = getStringUntilChar(chars, i, ' ');
+        i += days.length() + 1;
+        ArrayList<Integer> dayList = checkWeekDays(days);
+        if(dayList != null) {
+            words.add(dayList);
+            String origin = getStringUntilChar(chars, i, ' ');
+            i += origin.length() + 1;
+            String destination = getStringUntilChar(chars, i, ' ');
+            i += destination.length() + 1;
+            valid = isAThreeCharWord(origin) && isAThreeCharWord(destination);
+            if (valid) {
+                String depTime = getStringUntilChar(chars, i, ' ');
+                i += depTime.length() + 1;
+                valid = isADayTime(depTime);
+                if(valid) {
+                    String duration = getStringUntilChar(chars, i, ' ');
+                    i += duration.length() + 1;
+                    String price = getStringUntilChar(chars, i, '\0');
+                    double priceDouble = 0.0;
+                    if(valid) {
+                        try {
+                            priceDouble = Double.parseDouble(price);
+                        } catch (NumberFormatException e) {
+                            valid = false;
+                        }
+                        valid = valid && validDuration(duration) && validPrice(priceDouble);
+                        if(valid) {
+
+                            atc.receiveFlightInsertion((String)words.get(1),(Integer)words.get(2),dayList,
+                                    origin, destination, depTime, duration, priceDouble);
+                        }
+
+                    }
                 }
             }
         }
@@ -185,9 +222,9 @@ public class Terminal {
         String fileName = getStringUntilChar(chars, i, ' ');
         String action = getStringUntilChar(chars, i, '\0');
         boolean fileIsValid = true;
-        FileInputStream inputStream = null;
-        try {
-            inputStream = new FileInputStream(fileName);
+        BufferedReader br = null;
+        try{
+           br = new BufferedReader(new FileReader("file.txt"));
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
             fileIsValid = false;
@@ -195,9 +232,9 @@ public class Terminal {
         if(fileIsValid) {
             if(action.equals("append") || action.equals("replace")) {
                 if(item.equals("airports")) {
-                    massiveAirportInsertion(action,inputStream);
+                    massiveAirportInsertion(action, br);
                 } else if(item.equals("flight")) {
-                    massiveFlightInsertion(action, inputStream);
+                    massiveFlightInsertion(action, br);
                 }
             } else {
                 System.out.println("Invalid massive insertion action." +
@@ -206,11 +243,70 @@ public class Terminal {
         }
     }
 
-    private void massiveAirportInsertion(String action, FileInputStream file) {
-        //To be implemented
+    /**
+     * Massive airport insertion analyze file line by line.
+     * If there is an invalid line it is not added but adds but goes on with following lines.
+     * @param action indicates whether airports must be appended or replaced
+     * @param br Buffered Reader of the input file
+     */
+    private void massiveAirportInsertion(String action, BufferedReader br) {
+        String line;
+        int lineNumber = 1;
+        boolean lineIsValid;
+        if(action.equals("append")) {
+            try{
+                while((line=br.readLine())!=null) {
+                    lineIsValid = airportLineProcessing(line);
+                    if(!lineIsValid) {
+                        System.out.println("Line " + lineNumber + " could not be added " +
+                                "because it has an invalid format");
+                    }
+                    lineNumber++;
+                }
+            } catch (IOException e) {
+                System.out.println("Aborting. Unexpected input/output exception");
+            }
+
+        }
     }
 
-    private void massiveFlightInsertion(String action, FileInputStream file) {
+    /**
+     * Individual airport processing from file. This method builds an individual airport insertion
+     * with the terminal array. If argument number is correct checkCoordinates is called and if they
+     * are okay, which automatically inserts the airport if these are correct.
+     * @param line file input
+     * @return true if airport is syntactically correct, false if not.
+     */
+    private boolean airportLineProcessing(String line) {
+        words.clear();
+        words.add("insert");
+        words.add("airport");
+        ArrayList<String> lineWords = new ArrayList<>();
+        char [] lineChars = line.toCharArray();
+        int i = 0;
+        String current;
+        while(i < lineChars.length) {
+            current = getStringUntilChar(lineChars, i, '#');
+            i += current.length() + 1;
+            words.add(current);
+        }
+        if(lineWords.size() != 5) {
+            return false;
+        }
+        /**
+         * Building a char array to seize the individual insertion coordinate checking method
+         */
+        String coordinates = (String)words.get(3);
+        coordinates += ' ';
+        coordinates += (String)words.get(4);
+        char [] coordChars =  coordinates.toCharArray();
+        if(isAThreeCharWord(lineWords.get(0))) {
+            return checkCoordinates(coordChars, 0);
+        }
+        return false;
+    }
+
+    private void massiveFlightInsertion(String action, BufferedReader br) {
         //To be implemented
     }
 
@@ -424,5 +520,20 @@ public class Terminal {
         } else {
             System.out.println("Invalid priority parameter");
         }
+    }
+
+    private boolean isADayTime(String date) {
+        return true;
+        //To be implemented
+    }
+
+    private boolean validDuration(String duration) {
+        return true;
+        //To be implemented
+    }
+
+    private boolean validPrice(Double price) {
+        return true;
+        //To be implemented
     }
 }
