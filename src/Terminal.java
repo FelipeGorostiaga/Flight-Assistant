@@ -21,6 +21,7 @@ public class Terminal {
 
     public Terminal() {
         this.atc = new AirTrafficController();
+        this.words = new ArrayList<>();
     }
     /**
      * Creates the controller and gets ready for user input
@@ -98,17 +99,19 @@ public class Terminal {
      * @param chars user input
      * @param i current index of char array
      */
-    private void newAirportValidation(char[] chars, int i) {
-        String airport = getStringUntilChar(chars, i, '\0');
+    private boolean newAirportValidation(char[] chars, int i) {
+        String airport = getStringUntilChar(chars, i, ' ');
         i += airport.length() + 1;
         words.add(airport);
-        if(isAThreeCharWord(airport)) {
-            checkCoordinates(chars, i);
+        if(isAValidAirportName(airport)) {
+            return checkCoordinates(chars, i);
         }
+        return false;
     }
 
     private boolean checkCoordinates(char[] chars, int i) {
         String lat = getStringUntilChar(chars, i, ' ');
+        i += lat.length() + 1;
         boolean valid = true;
         Double latitude = 0.0;
         Double longitude = 0.0;
@@ -134,6 +137,7 @@ public class Terminal {
                 System.out.println("Longitude is out of range. It must be a real number between -180 and 180)");
             } else {
                 atc.insertAirport((String)words.get(2),latitude,longitude);
+                System.out.println("SYNTAX SUCCESS!!");
                 return true;
             }
         }
@@ -146,14 +150,15 @@ public class Terminal {
      * @param chars user input
      * @param i current index of char array
      */
-    private void newFlightValidation(char[] chars, int i) {
+    private boolean newFlightValidation(char[] chars, int i) {
         String airline = getStringUntilChar(chars, i, ' ');
         i += airline.length() + 1;
         boolean valid = true;
-        if(isAThreeCharWord(airline)) {
+        if(isAValidAirlineName(airline)) {
             words.add(airline);
             Integer flightNumber = 0;
             String flightNum = getStringUntilChar(chars, i, ' ');
+            i += flightNum.length() + 1;
             try {
                 flightNumber = Integer.parseInt(flightNum);
             } catch(NumberFormatException e) {
@@ -162,13 +167,14 @@ public class Terminal {
             }
             if(valid) {
                 words.add(flightNumber);
-                newFlightSecondCheck(chars, i);
+                return newFlightSecondCheck(chars, i);
             } else {
                 System.out.println("Invalid flight number");
             }
         } else {
             System.out.println("Invalid airline name");
         }
+        return false;
     }
 
     /**
@@ -176,7 +182,7 @@ public class Terminal {
      * @param chars input
      */
 
-    private void newFlightSecondCheck(char[] chars, int i) {
+    private boolean newFlightSecondCheck(char[] chars, int i) {
         boolean valid;
         String days = getStringUntilChar(chars, i, ' ');
         i += days.length() + 1;
@@ -187,7 +193,7 @@ public class Terminal {
             i += origin.length() + 1;
             String destination = getStringUntilChar(chars, i, ' ');
             i += destination.length() + 1;
-            valid = isAThreeCharWord(origin) && isAThreeCharWord(destination);
+            valid = isAValidAirportName(origin) && isAValidAirportName(destination);
             if (valid) {
                 String depTime = getStringUntilChar(chars, i, ' ');
                 i += depTime.length() + 1;
@@ -196,20 +202,16 @@ public class Terminal {
                     String duration = getStringUntilChar(chars, i, ' ');
                     i += duration.length() + 1;
                     String price = getStringUntilChar(chars, i, '\0');
-                    double priceDouble = 0.0;
                     if (valid) {
-                        try {
-                            priceDouble = Double.parseDouble(price);
-                        } catch (NumberFormatException e) {
-                            valid = false;
-                        }
                         int time = durationInMinutes(duration);
-                        valid = valid && durationInMinutes(duration) != -1 && validPrice(priceDouble);
+                        Double doublePrice = validatePrice(price);
+                        valid = valid && (time != -1) && (doublePrice != null);
                         if (valid) {
-                            atc.receiveFlightInsertion((String) words.get(1), (Integer) words.get(2), dayList,
-                                    origin, destination, depTime, time, priceDouble);
+                            /*atc.receiveFlightInsertion((String) words.get(1), (Integer) words.get(2), dayList,
+                                    origin, destination, depTime, time, doublePrice);*/
+                            System.out.println("SYNTAX SUCCESS!!");
                         } else {
-                            System.out.println("Invalid parameters for flight insertion");
+                            System.out.println("Price format is invalid");
                         }
                     } else {
                         System.out.println("Invalid parameters for flight insertion");
@@ -220,10 +222,8 @@ public class Terminal {
             } else {
                 System.out.println("Invalid parameters for flight insertion");
             }
-        } else {
-            System.out.println("Invalid parameters for flight insertion");
         }
-
+        return false;
     }
 
     /**
@@ -234,7 +234,6 @@ public class Terminal {
      * @param item indicates if the massive insertion involves flights or airports
      */
     private void massiveValidation(char[] chars, int i, String item) {
-        String fileName = getStringUntilChar(chars, i, ' ');
         String action = getStringUntilChar(chars, i, '\0');
         boolean fileIsValid = true;
         BufferedReader br = null;
@@ -247,9 +246,9 @@ public class Terminal {
         if(fileIsValid) {
             if(action.equals("append") || action.equals("replace")) {
                 if(item.equals("airports")) {
-                    massiveAirportInsertion(action, br);
+                    massiveInsertion(action, br, "airport");
                 } else if(item.equals("flight")) {
-                    massiveFlightInsertion(action, br);
+                    massiveInsertion(action, br, "flight");
                 }
             } else {
                 System.out.println("Invalid massive insertion action." +
@@ -263,66 +262,62 @@ public class Terminal {
      * If there is an invalid line it is not added but adds but goes on with following lines.
      * @param action indicates whether airports must be appended or replaced
      * @param br Buffered Reader of the input file
+     * @param type indicates if massive insertion involves flights or airports
      */
-    private void massiveAirportInsertion(String action, BufferedReader br) {
+    private void massiveInsertion(String action, BufferedReader br, String type) {
         String line;
         int lineNumber = 1;
-        boolean lineIsValid;
-        if(action.equals("append")) {
-            try{
-                while((line=br.readLine())!=null) {
-                    lineIsValid = airportLineProcessing(line);
-                    if(!lineIsValid) {
-                        System.out.println("Line " + lineNumber + " could not be added " +
-                                "because it has an invalid format");
-                    }
-                    lineNumber++;
-                }
-            } catch (IOException e) {
-                System.out.println("Aborting. Unexpected input/output exception");
+        boolean lineIsValid = true;
+        if(action.equals("replace")) {
+            if(type.equals("airport")) {
+                atc.deleteAllAirports();
+            } else {
+                atc.deleteAllFlights();
             }
-
+        }
+        try{
+            while((line=br.readLine())!=null) {
+                if (type.equals("airport")) {
+                    lineIsValid = lineProcessing(line, type);
+                } else if(type.equals("flight")) {
+                    lineIsValid = lineProcessing(line, type);
+                }
+                if(!lineIsValid) {
+                    System.out.println("Line " + lineNumber + " could not be added " +
+                            "because it has an invalid format");
+                }
+                lineNumber++;
+            }
+        } catch (IOException e) {
+            System.out.println("Aborting. Unexpected input/output exception");
         }
     }
 
     /**
-     * Individual airport processing from file. This method builds an individual airport insertion
-     * with the terminal array. If argument number is correct checkCoordinates is called and if they
-     * are okay, which automatically inserts the airport if these are correct.
+     * Individual airport/flight processing from file. This method builds an individual airport/flight insertion
+     * with the terminal array. new Airport/Flight validation methods return whether insertion was valid or not
      * @param line file input
      * @return true if airport is syntactically correct, false if not.
      */
-    private boolean airportLineProcessing(String line) {
+    private boolean lineProcessing(String line, String item) {
         words.clear();
         words.add("insert");
-        words.add("airport");
-        ArrayList<String> lineWords = new ArrayList<>();
+        words.add(item);
         char [] lineChars = line.toCharArray();
-        int i = 0;
-        String current;
-        while(i < lineChars.length) {
-            current = getStringUntilChar(lineChars, i, '#');
-            i += current.length() + 1;
-            words.add(current);
+        for (int i = 0; i < lineChars.length; i++) {
+            if(lineChars[i] == '#') {
+                lineChars[i] = ' ';
+            }
         }
-        if(lineWords.size() != 5) {
-            return false;
+        if(item.equals("airport")) {
+            return newAirportValidation(lineChars, 0);
+        } else {
+            return newFlightValidation(lineChars, 0);
         }
+
         /**
          * Building a char array to seize the individual insertion coordinate checking method
          */
-        String coordinates = (String)words.get(3);
-        coordinates += ' ';
-        coordinates += (String)words.get(4);
-        char [] coordChars =  coordinates.toCharArray();
-        if(isAThreeCharWord(lineWords.get(0))) {
-            return checkCoordinates(coordChars, 0);
-        }
-        return false;
-    }
-
-    private void massiveFlightInsertion(String action, BufferedReader br) {
-        //To be implemented
     }
 
     /**
@@ -338,8 +333,9 @@ public class Terminal {
             String airport = getStringUntilChar(chars, i, '\0');
             i += airport.length() + 1;
             words.add(airport);
-            if(isAThreeCharWord(airport)) {
+            if(isAValidAirportName(airport)) {
                 atc.deleteAirport(airport);
+                System.out.println("SYNTAX SUCCESS!!");
             } else {
                 System.out.println("Airport names should contain exactly three alphabetic characters");
             }
@@ -349,14 +345,17 @@ public class Terminal {
             String thirdWord = getStringUntilChar(chars, i, '\0');
             if(thirdWord.equals("airport")) {
                 atc.deleteAllAirports();
+                System.out.println("SYNTAX SUCCESS!!");
             } else if(thirdWord.equals("flight")) {
                 atc.deleteAllFlights();
+                System.out.println("SYNTAX SUCCESS!!");
             }
         }
     }
 
     private void checkFlightDeletion(char[] chars, int i) {
         String airlineName = getStringUntilChar(chars, i, ' ');
+        i += airlineName.length() + 1;
         String flightNum = getStringUntilChar(chars, i, '\0');
         Integer num = 0;
         boolean validNumber = true;
@@ -366,8 +365,13 @@ public class Terminal {
             System.out.println("Invalid flight number");
             validNumber = false;
         }
-        if(validNumber && isAThreeCharWord(airlineName)) {
-            atc.deleteFlight(airlineName, num);
+        if(validNumber) {
+            if (isAValidAirlineName(airlineName)) {
+                atc.deleteFlight(airlineName, num);
+                System.out.println("SYNTAX SUCCESS!!");
+            } else {
+                System.out.println("Invalid airline name input format");
+            }
         }
     }
 
@@ -383,7 +387,7 @@ public class Terminal {
         String destination = getStringUntilChar(chars, i, ' ');
         i += origin.length() + 1;
         words.add(destination);
-        if(isAThreeCharWord(origin) && isAThreeCharWord(destination)) {
+        if(isAValidAirportName(origin) && isAValidAirportName(destination)) {
             routePriorityCheck(chars, i);
         } else {
             System.out.println("Invalid origin and destination airports. Unable to find route");
@@ -406,12 +410,14 @@ public class Terminal {
          *        3 -> invalid input
          */
         int state = 0;
-        for(int i=0; i<allDays.length() && state != 3; i++) {
+        for(int i=0; i < allDays.length() && state != 3; i++) {
             if(state == 0 || state == 1) {
+                if(state == 0) {
+                    current = "";
+                }
                 current = current + allDays.charAt(i);
                 state++;
-            }
-            if(state == 2) {
+            } else if(state == 2) {
                 if(!dayFactoryAdd(days,current)) {
                     state = 3;
                 }
@@ -472,7 +478,7 @@ public class Terminal {
         String airport = getStringUntilChar(chars, i, ' ');
         i += airport.length() + 1;
         words.add(airport);
-        if(isAThreeCharWord(airport)) {
+        if(isAValidAirportName(airport)) {
             routePriorityCheck(chars, i);
         }
     }
@@ -498,10 +504,9 @@ public class Terminal {
         return ret;
     }
 
-    private boolean isAThreeCharWord(String word) {
-        boolean allLetters = true;
+    private boolean isAValidAirportName(String word) {
         char [] airportChars =word.toCharArray();
-        for (int j = 0; j <= airportChars.length; j++) {
+        for (int j = 0; j < airportChars.length; j++) {
             if(!Character.isAlphabetic(airportChars[j])) {
                 return false;
             }
@@ -525,11 +530,14 @@ public class Terminal {
         if(priority.equals("ft") || priority.equals("tt") || priority.equals("pr")) {
             String weekDays = getStringUntilChar(chars, i, '\0');
             List<Integer> days = checkWeekDays(weekDays);
+            words.add(days);
             if(days != null) {
                 if(words.get(0).equals("findRoute")) {
                     atc.receiveFindRoute((String)words.get(1), (String)words.get(2), (String)words.get(3),(ArrayList<Integer>)words.get(4));
+                    System.out.println("SYNTAX SUCCESS!!");
                 } else if(words.get(0).equals("worldTrip")) {
                     atc.receiveWorldTrip((String)words.get(1), (String)words.get(2), (ArrayList<Integer>)words.get(3));
+                    System.out.println("SYNTAX SUCCESS!!");
                 }
             }
         } else {
@@ -538,10 +546,7 @@ public class Terminal {
     }
 
     private boolean isADayTime(String date) {
-        if(Pattern.matches("^[0-2][0-3]h:[0-5][0-9]m$",date)){
-            return true;
-        }
-        return false;
+        return date.matches("(([0-1][0-9])|(2[0-3])):[0-5][0-9]");
     }
 
     /**
@@ -549,18 +554,18 @@ public class Terminal {
      * state: 0 -> no number read
      *        1 -> one number read
      *        2 -> two numbers read
-     * @param duration
-     * @return
+     * @param duration string
+     * @return total minutes
      */
-
     private int durationInMinutes(String duration) {
         int state = 0;
         int minutes = 0;
         int firstDigit = -1;
         int secondDigit = -1;
         boolean hoursRead = false;
+        char current;
         for(int i = 0; i<duration.length(); i++) {
-            char current = duration.charAt(i);
+            current = duration.charAt(i);
             if(state == 0) {
                 if(Character.isDigit(current)) {
                     firstDigit = Character.getNumericValue(current);
@@ -569,8 +574,7 @@ public class Terminal {
                 else {
                     return -1;
                 }
-            }
-            if(state == 1) {
+            } else if(state == 1) {
                 if(Character.isDigit(current)) {
                     secondDigit = Character.getNumericValue(current);
                     state = 2;
@@ -581,8 +585,7 @@ public class Terminal {
                 } else {
                     return -1;
                 }
-            }
-            if(state == 2) {
+            } else if(state == 2) {
                 if(current == 'h' && !hoursRead) {
                     hoursRead = true;
                     minutes = buildMinutes(firstDigit, secondDigit, 60);
@@ -597,16 +600,51 @@ public class Terminal {
         return minutes;
     }
 
+    private boolean isAValidAirlineName(String airline) {
+        char [] airlineChars = airline.toCharArray();
+        for (int j = 0; j < airlineChars.length; j++) {
+            if(!Character.isAlphabetic(airlineChars[j])) {
+                return false;
+            }
+        }
+        if(!airline.isEmpty() && airline.length() <= 3 ) {
+            return true;
+        }
+        return false;
+    }
+
     private int buildMinutes(int first, int second, int factor) {
         return factor*(second + first * 10);
     }
 
-    private boolean validPrice(Double price) {
-        Double fractionPart = price - price.longValue();
-        int decimalDigits = fractionPart.toString().length() - 2;
-        if(decimalDigits == 2 && price >= 0.0) {
-            return true;
+    /**
+     * returns price in Double format if true, null if not
+     * @param price
+     * @return
+     */
+    private Double validatePrice(String price) {
+        Double priceDouble = -1.0;
+        boolean valid = true;
+        try {
+            priceDouble = Double.parseDouble(price);
+        } catch (NumberFormatException e) {
+            valid = false;
         }
-        return false;
+        if(valid) {
+            int decimalDigits = 0;
+            boolean counting = false;
+            for(int i = 0; i < price.length(); i++) {
+                if(counting) {
+                    decimalDigits++;
+                }
+                if(price.charAt(i) == '.') {
+                    counting = true;
+                }
+            }
+            if(decimalDigits == 2 && priceDouble >= 0.0) {
+                return priceDouble;
+            }
+        }
+        return null;
     }
 }

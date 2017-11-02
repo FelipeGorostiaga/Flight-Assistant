@@ -1,4 +1,4 @@
-import sun.reflect.generics.tree.Tree;
+//import sun.reflect.generics.tree.Tree;
 
 import java.sql.Time;
 import java.util.*;
@@ -593,4 +593,10 @@ public class AirTrafficController implements AirTrafficControllerInterface{
         current.visited = false;
     }
 
+    public String receiveFlightInsertion(String airline, int flightNum, List<Integer> weekDays, String origin, String destination,
+                                  String departureTime, int duration, double price){ return null;}
+
+    public String receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays){return null;}
+
+    public String receiveWorldTrip(String origin, String priority, List<Integer> weekDays){return null;}
 }
