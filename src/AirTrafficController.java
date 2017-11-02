@@ -399,9 +399,9 @@ public class AirTrafficController implements AirTrafficControllerInterface{
         public PQNode( Flight flight, PQNode previous, double prevTotal, double flightTime, double price, double totalTime, int priority) {
             this.flight = flight;
             this.previous = previous;
-            this.info[0] = flightTime;
-            this.info[1] = price;
-            this.info[2] = totalTime;
+            this.info[FLIGHT_TIME] = flightTime;
+            this.info[PRICE] = price;
+            this.info[TOTAL_TIME] = totalTime;
             this.priority = priority;
             this.distance = info[priority] + prevTotal;
         }
