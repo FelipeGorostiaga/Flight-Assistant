@@ -1,9 +1,8 @@
 import java.io.*;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.regex.Pattern;
+
 
 /**
  *  @author Santiago Swinnen
@@ -18,10 +17,14 @@ public class Terminal {
 
     private AirTrafficController atc;
     private ArrayList<Object> words;
+    private String output;
+    private String format;
 
     public Terminal() {
         this.atc = new AirTrafficController();
         this.words = new ArrayList<>();
+        this.output = "stdout";
+        this.format = "text";
     }
     /**
      * Creates the controller and gets ready for user input
@@ -60,6 +63,8 @@ public class Terminal {
             checkRoute(chars, i);
         } else if(action.equals("worldTrip")) {
             checkWorldTrip(chars, i);
+        } else if(action.equals("outputFormat")) {
+            checkFormat(chars, i);
         } else {
             System.out.println("Invalid command, please try again");
         }
@@ -85,7 +90,7 @@ public class Terminal {
             if (thirdWord.equals("airports") || thirdWord.equals("flight")) {
                 massiveValidation(chars, i, thirdWord);
             } else {
-                System.out.println("'insert all' command only supports one of the following options: " +
+                System.out.println("'insert all' command only supports one of the following fmtions: " +
                         "<airports>, <flights>");
             }
         }
@@ -207,8 +212,9 @@ public class Terminal {
                         Double doublePrice = validatePrice(price);
                         valid = valid && (time != -1) && (doublePrice != null);
                         if (valid) {
-                            /*atc.receiveFlightInsertion((String) words.get(1), (Integer) words.get(2), dayList,
-                                    origin, destination, depTime, time, doublePrice);*/
+                            RequestResult rr = atc.receiveFlightInsertion((String) words.get(1), (Integer) words.get(2), dayList,
+                                    origin, destination, depTime, time, doublePrice);
+
                             System.out.println("SYNTAX SUCCESS!!");
                         } else {
                             System.out.println("Price format is invalid");
@@ -481,6 +487,22 @@ public class Terminal {
         if(isAValidAirportName(airport)) {
             routePriorityCheck(chars, i);
         }
+    }
+
+    private void checkFormat(char [] chars, int i) {
+        String fmt = getStringUntilChar(chars, i, ' ');
+        i += fmt.length() + 1;
+        if(fmt.equals("KML") || fmt.equals("text")) {
+            words.add(fmt);
+            checkOutput(chars, i);
+        } else {
+            System.out.println("Invalid output format");
+        }
+    }
+
+    private void checkOutput(char [] chars, int i) {
+        String opt = getStringUntilChar(chars, i, '\0');
+        output = opt;
     }
 
 

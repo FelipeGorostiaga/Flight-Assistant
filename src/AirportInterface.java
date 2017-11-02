@@ -9,7 +9,7 @@ public interface AirportInterface {
 
     double getLongitude();
 
-    List<AirTrafficController.Flight> getFlights();
+    List<Flight> getFlights();
 
 
 

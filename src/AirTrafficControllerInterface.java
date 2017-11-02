@@ -5,29 +5,29 @@ import java.util.List;
 public interface AirTrafficControllerInterface {
 
 
-    boolean insertFlight(String airline, Integer number, AirTrafficController.Airport origin, AirTrafficController.Airport destination, List<Integer> departureDays, Integer duration, Integer departureTime, double price);
+    boolean insertFlight(String airline, Integer number, Airport origin, Airport destination, List<Integer> departureDays, Integer duration, Integer departureTime, double price);
     boolean insertAirport(String name, double latitude, double longitude);
 
     boolean deleteAirport(String name);
     boolean deleteFlight(String airlineName, Integer Number);
 
-    void insertAllAirports(List<AirTrafficController.Airport> airports);
+    void insertAllAirports(List<Airport> airports);
     void deleteAllAirports();
-    void replaceAllAirports(List<AirTrafficController.Airport> airport);
+    void replaceAllAirports(List<Airport> airport);
 
 
-    void insertAllFlights(List<AirTrafficController.Flight> flights);
+    void insertAllFlights(List<Flight> flights);
     void deleteAllFlights();
-    void replaceAllFlights(List<AirTrafficController.Flight> flights);
+    void replaceAllFlights(List<Flight> flights);
 
 
-    List<AirTrafficController.Flight> findRouteMinFlightTime(AirTrafficController.Airport origin, AirTrafficController.Airport destiny, List<Integer> departureDays);
-    List<AirTrafficController.Flight> findRouteMinPrice(AirTrafficController.Airport origin, AirTrafficController.Airport destiny, List<Integer> departureDays);
-    List<AirTrafficController.Flight> findRouteMinTotalTime(AirTrafficController.Airport origin, AirTrafficController.Airport destiny, List<Integer> departureDays);
+    List<Flight> findRouteMinFlightTime(Airport origin, Airport destiny, List<Integer> departureDays);
+    List<Flight> findRouteMinPrice(Airport origin, Airport destiny, List<Integer> departureDays);
+    List<Flight> findRouteMinTotalTime(Airport origin, Airport destiny, List<Integer> departureDays);
 
-    List<AirTrafficController.Flight> worldTripMinFlightTime();
-    List<AirTrafficController.Flight> worldTripMinPrice();
-    List<AirTrafficController.Flight> worldTripMinTotalTime();
+    List<Flight> worldTripMinFlightTime();
+    List<Flight> worldTripMinPrice();
+    List<Flight> worldTripMinTotalTime();
 
     /**
      * Receives flight insert instruccion from terminal
@@ -53,7 +53,7 @@ public interface AirTrafficControllerInterface {
      * @return String representing whether rhe action could be performed of not.
      * Terminal will print whatever it gets
      */
-    AirTrafficController.RequestResult receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays);
+    RequestResult receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays);
 
     /**
      * Receives 'worldTrip' instruction from terminal and calls the right method according to the priority
