@@ -423,5 +423,174 @@ public class AirTrafficController implements AirTrafficControllerInterface{
             return Double.valueOf(distance).compareTo(o.distance);
         }
     }
+    //estas listas se usan para no tener que recorrer cada vez que quiero saber el precio total del viaje almacenado
+    private class PriceList extends ArrayList<Flight> {
+
+        private double price;
+
+        public double getPrice() {
+            return price;
+        }
+
+        public void setPrice(double price) {
+            this.price = price;
+        }
+
+    }
+    private class DurationList extends ArrayList<Flight> {
+
+        private int duration;
+
+        public int getDuration() {
+            return duration;
+        }
+
+        public void setDuration(double price) {
+            this.duration = duration;
+        }
+
+    }
+
+
+    public PriceList worldTripPrice(List<Integer> departureDays) {
+
+        clearMarks();
+        int size = airportList.size();
+
+        List<Flight> route = Arrays.asList(new Flight[size]);   // lista con tamano igual al numero de aeropuertos para guardar el camino por nivel
+        PriceList minList = new PriceList();                 //lista que alamcena el minimo recorrido de los minimos recorridos por nodo
+        PriceList minRoute = new PriceList();  //lista que se almacena la mejor vuelta al mundo para ese nodo.
+
+        //Necesito un metodo que agarre todos los aeropuertos que tengan vuelos que salgan en algunos de los que estan en departureDays
+        //y itero en el for-each con estos aeropuertos, no con todos.
+
+        for (Airport airport : airportList) {
+
+            minRoute.clear();
+            worldTripPrice(airport, airport, 0, size, route, minRoute, 0);
+
+            //Si se consiguio una vuelta al mundo valida con este nodo y su precio es menor a alguno encontrado previamente, se le asigna a minList.
+            if(!minRoute.isEmpty()) {
+                if(minList.isEmpty() || minRoute.getPrice() < minList.getPrice()) {
+                    minList.clear();
+                    minList.addAll(minRoute);
+                    minList.setPrice(minRoute.getPrice());
+                }
+            }
+
+        }
+        if(minList.isEmpty()) //ver por comodidad de la terminal si prefiere una lista vacia o null.
+            return null;
+        else
+            return minList;
+    }
+       /*
+            size: es el total de nodos en el grafo, se va restando uno en cada recursion.
+            level: es la profundidad de la recursion para saber donde escribir en la lista
+            route: camino actual en la recursion
+            minRoute: camino optimo encontrado
+         */
+
+    private void worldTripPrice(Airport current, Airport origin, int level, int size, List<Flight> route, PriceList minRoute, double price) {
+
+        if (size == 1)
+            origin.visited = false;
+
+        current.visited = true;
+
+        for (Flight flight : current.flightList) {
+
+            if (!flight.destination.visited) {
+
+                //se completa el ciclo hamiltoniano
+                if (flight.destination.equals(origin)) {
+                    if (minRoute.isEmpty() || ((price + flight.price) < minRoute.getPrice())) {
+
+                        minRoute.clear();
+                        route.add(level + 1, flight);  //se agrega el vuelo que vuelve al nodo origen.
+                        minRoute.addAll(route);
+                        minRoute.setPrice(price + flight.price);
+                    }
+                }
+                //la lista que almacena la mejor ruta esta vacia o no esta vacia y todavia no me pase del minimo que tengo
+                else {
+                    if((minRoute.isEmpty()) || (minRoute.getPrice() > (price + flight.price))) {
+
+                    route.add(level, flight);
+                    worldTripPrice(flight.destination, origin, level + 1, size - 1, route, minRoute, price + flight.price);
+                    }
+                }
+
+
+            }
+        }
+
+        current.visited = false;
+
+    }
+
+
+    public DurationList worldTripFlightTime(List<Integer> departureDays) {
+
+        clearMarks();
+        int size = airportList.size();
+
+        List<Flight> route = Arrays.asList(new Flight[size]);
+        DurationList minList = new DurationList();
+        DurationList minRoute = new DurationList();
+
+        for (Airport airport : airportList) {
+
+            minRoute.clear();
+            worldTripFlightTime(airport, airport, 0, size, route, minRoute, 0);
+
+            if(!minRoute.isEmpty()) {
+                if(minList.isEmpty() || minRoute.getDuration() < minList.getDuration()) {
+                    minList.clear();
+                    minList.addAll(minRoute);
+                    minList.setDuration(minRoute.getDuration());
+                }
+            }
+
+        }
+        if(minList.isEmpty()) //ver por comodidad de la terminal si prefiere una lista vacia o null.
+            return null;
+        else
+            return minList;
+    }
+
+
+    private void worldTripFlightTime(Airport current, Airport origin, int level, int size, List<Flight> route, DurationList minRoute, Integer duration) {
+
+        if (size == 1)
+            origin.visited = false; //habilito que se pueda volver al nodo origen en caso de que exista el vuelo
+
+        current.visited = true;
+
+        for (Flight flight : current.flightList) { //recorro la lista de vuelos del aeropuerto (DFS)
+
+            if (!flight.destination.visited) {
+
+                if (flight.destination.equals(origin)) {
+
+                    if(minRoute.isEmpty() || ((duration + flight.duration) < minRoute.getDuration()) ) {
+
+                        minRoute.clear();
+                        route.add(level + 1, flight);  //se agrega el vuelo que vuelve al nodo origen.
+                        minRoute.addAll(route);
+                        minRoute.setDuration(duration + flight.duration);
+                    }
+                }
+                else {
+                    if (minRoute.isEmpty() || minRoute.getDuration() > (duration + flight.duration)) {
+                        route.add(level, flight);
+                        worldTripFlightTime(flight.destination, origin, level + 1, size - 1, route, minRoute, duration + flight.duration);
+                    }
+                }
+
+            }
+        }
+        current.visited = false;
+    }
 
 }
