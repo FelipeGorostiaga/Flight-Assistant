@@ -145,7 +145,7 @@ public class AirTrafficController implements AirTrafficControllerInterface{
             for(Integer day: departureDays){
                 if(flight.departureDays.contains(day)){
                     flight.setDepartureDay(day);
-                    pq.offer(new PQNode(flight, null, 0, flight.duration,flight.price, 0, priority));
+                    pq.offer(new PQNode(new Flight(flight) , null, 0, flight.duration,flight.price, 0, priority));
                     if(priority != TOTAL_TIME){
                         break;
                     }
