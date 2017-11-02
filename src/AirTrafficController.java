@@ -1,5 +1,8 @@
-//import sun.reflect.generics.tree.Tree;
 
+
+import javax.xml.transform.Result;
+import java.lang.ref.ReferenceQueue;
+import java.nio.channels.IllegalChannelGroupException;
 import java.sql.Time;
 import java.util.*;
 
@@ -7,6 +10,9 @@ import java.util.*;
 public class AirTrafficController implements AirTrafficControllerInterface{
 
     private static final int DAY_TIME = 24 * 60;
+    private static final int FLIGHT_TIME = 0;
+    private static final int PRICE = 1;
+    private static final int TOTAL_TIME = 2;
 
     private List<Airport> airportList = new ArrayList<>();
     private HashMap<String,Airport> airports = new HashMap<>();
@@ -60,6 +66,7 @@ public class AirTrafficController implements AirTrafficControllerInterface{
     private void clearMarks(){
         for(Airport airport : airportList){
             airport.visited = false;
+            airport.origin = null;
         }
     }
 
@@ -116,127 +123,75 @@ public class AirTrafficController implements AirTrafficControllerInterface{
 
     }
 
-    public List<Flight> findRouteMinFlightTime(Airport origin, Airport destination, List<Integer> departureDays) {
+
+    public RequestResult receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays) {
+        RequestResult ret = new RequestResult();
+        switch(priority){
+            case "ft": findRouteMinPriority(airports.get(origin), airports.get(destination), FLIGHT_TIME, weekDays, ret); break;
+            case "pr": findRouteMinPriority(airports.get(origin), airports.get(destination), PRICE, weekDays, ret); break;
+            case "tt": findRouteMinPriority(airports.get(origin), airports.get(destination), TOTAL_TIME, weekDays, ret); break;
+            default: throw new IllegalArgumentException("Not a valid priority");
+        }
+        return ret;
+    }
+
+
+    public RequestResult findRouteMinPriority(Airport origin, Airport destination, int priority, List<Integer> departureDays, RequestResult ret) {
         PriorityQueue<PQNode> pq = new PriorityQueue<>();
         clearMarks();
         origin.visited = true;
           /*check if we route can be started on requested days*/
         for(Flight flight : origin.flightList){
             for(Integer day: departureDays){
-                if(flight.departureDays.get(day) != null){
-                    pq.offer(new PQNode(flight, null, 0 + flight.duration)); break;
+                if(flight.departureDays.contains(day)){
+                    flight.setDepartureDay(day);
+                    pq.offer(new PQNode(flight, null, 0, flight.duration,flight.price, 0, priority));
+                    if(priority != TOTAL_TIME){
+                        break;
+                    }
                 }
             }
         }
         while(!pq.isEmpty()){
             PQNode pqnode = pq.poll();
             Airport currentAirport = pqnode.flight.destination;
-            if(!currentAirport.visited){
+            if(!currentAirport.visited || priority == TOTAL_TIME){
+                currentAirport.origin = pqnode.flight.origin;
                 currentAirport.visited = true;
                 if(currentAirport.equals(destination)){
-                    return routePlanner(pqnode, origin);
+                    return routePlanner(pqnode, origin, ret);
                 }
                 for(Flight flight : currentAirport.flightList){
-                    if(!flight.destination.visited){
-                        pq.offer(new PQNode(flight, pqnode, pqnode.distance + flight.duration));
+                    if(!flight.destination.visited || (priority == TOTAL_TIME && flight.origin.equals(flight.destination.origin))){
+                        /*gets time waiting for connection*/
+                        Integer waitingTime = currentAirport.getConnectionTime(pqnode.flight.getDepartureDay(), pqnode.flight, flight);
+                        /*inserts Priority Queue Node with copy of flight */
+                        pq.offer(new PQNode(new Flight(flight), pqnode, pqnode.distance , flight.duration + pqnode.info[FLIGHT_TIME],
+                                flight.price + pqnode.info[PRICE], pqnode.info[TOTAL_TIME] + waitingTime + flight.duration, priority));
                     }
                 }
             }
         }
-        return null;
+        ret.success = false;
+        return ret;
     }
 
-    public List<Flight> findRouteMinPrice(Airport origin, Airport destination, List<Integer> departureDays) {
-        PriorityQueue<PQNode> pq = new PriorityQueue<>();
-        clearMarks();
-        origin.visited = true;
-          /*check if we route can be started on requested days*/
-        for(Flight flight : origin.flightList){
-            for(Integer day: departureDays){
-                if(flight.departureDays.get(day) != null){
-                    pq.offer(new PQNode(flight, null, 0 + flight.price)); break;
-                }
-            }
-        }
-        while(!pq.isEmpty()){
-            PQNode pqnode = pq.poll();
-            Airport currentAirport = pqnode.flight.destination;
-            if(!currentAirport.visited){
-                currentAirport.visited = true;
-                if(currentAirport.equals(destination)){
-                    return routePlanner(pqnode, origin);
-                }
-                for(Flight flight : currentAirport.flightList){
-                    if(!flight.destination.visited){
-                        pq.offer(new PQNode(flight, pqnode, pqnode.distance + flight.price));
-                    }
-                }
-            }
-        }
-        return null;
-    }
 
-    public List<Flight> findRouteMinTotalTime(Airport origin, Airport destination, List<Integer> departureDays) {
-        PriorityQueue<PQNode> pq = new PriorityQueue<>();
-        Integer departureDay = new Integer(0);
-        clearMarks();
-        origin.visited = true;
-         /*check if we route can be started on requested days*/
-        for(Flight flight : origin.flightList){
-            for(Integer day: departureDays){
-                if(flight.departureDays.get(day) != null){
-                    departureDay = day;
-                    pq.offer(new PQNode(flight, null, 0 + flight.duration)); break;
-                }
-            }
-        }
-        while(!pq.isEmpty()){
-            PQNode pqnode = pq.poll();
-            Airport currentAirport = pqnode.flight.destination;
-            if(!currentAirport.visited){
-               currentAirport.visited = true;
-                if(currentAirport.equals(destination)){
-                    return routePlanner(pqnode, origin);
-                }
-                for(Flight flight : currentAirport.flightList){
-                    if(!flight.destination.visited){
-                        Integer waitingTime = currentAirport.getConnectionTime(((int)(departureDay + pqnode.distance/(DAY_TIME)) % 7), pqnode.flight, flight);
-                        pq.offer(new PQNode(flight, pqnode, pqnode.distance + flight.duration + waitingTime));
-                    }
-                }
-            }
-        }
-        return null;
-    }
 
-    List<Flight> routePlanner(PQNode node, Airport origin){
+    RequestResult routePlanner(PQNode node, Airport origin, RequestResult ret){
         LinkedList<Flight> route = new LinkedList<>();
+        ret.totalTime = node.info[TOTAL_TIME];
+        ret.flightTime = node.info[FLIGHT_TIME];
+        ret.price = node.info[PRICE];
         while(!node.flight.origin.equals(origin)){
             route.push(node.flight);
             node = node.previous;
         }
         route.push(node.flight);
-        return route;
+        ret.success = true;
+        ret.route = route;
+        return ret;
     }
-
-
-
-
-
-    public List<Flight> worldTripMinFlightTime() {
-        /*
-        HashMap<Integer,List<Flight>> possibleRoutes = new HashMap<>();
-        for(Airport airpot : airportList){
-            clearMarks();
-            hamiltonianPath(airport, airportList.size());
-        }
-        return possibleRoutes.get(possibleRoutes.keySet().iterator().next());
-        */
-        return null;
-    }
-
-
-
 
     public List<Flight> worldTripMinPrice() {
         return null;
@@ -248,7 +203,11 @@ public class AirTrafficController implements AirTrafficControllerInterface{
 
 
     protected class Airport implements AirportInterface{
+       /*para saber de donde fue visitado*/
         private boolean visited;
+        private Airport origin;
+
+        /*data*/
         private String name;
         private double latitude;
         private double longitude;
@@ -316,13 +275,14 @@ public class AirTrafficController implements AirTrafficControllerInterface{
                 }
                 start -= DAY_TIME;
             }
-            while(arrival.departureDays.get(day) != null){
+            while(arrival.departureDays.contains(day)){
                 day++;
                 aux++;
                 if(day > 6){
                     day = 0;
                 }
             }
+            departure.departureDay = day;
             if(aux > 0){
                 aux--;
                 return  DAY_TIME - start + aux * DAY_TIME + departure.departureTime;
@@ -351,6 +311,7 @@ public class AirTrafficController implements AirTrafficControllerInterface{
         private double price;
         private Integer departureTime;
         private Integer duration;
+        private Integer departureDay = null;
 
         public Flight(String airline, Integer number, Airport origin, Airport destination, List<Integer> departureDays, Integer duration, Integer departureTime, double price) {
             this.airline = airline;
@@ -361,6 +322,17 @@ public class AirTrafficController implements AirTrafficControllerInterface{
             this.departureTime = departureTime;
             this.duration = duration;
             this.origin = origin;
+        }
+
+        public Flight(Flight flight){
+            this.airline = flight.airline;
+            this.number = flight.number;
+            this.departureDays = flight.departureDays;
+            this.destination = flight.destination;
+            this.price = flight.price;
+            this.departureTime = flight.departureTime;
+            this.duration = flight.duration;
+            this.origin = flight.origin;
         }
 
 
@@ -406,23 +378,51 @@ public class AirTrafficController implements AirTrafficControllerInterface{
         public double getPrice() {
             return price;
         }
+        public Integer getDepartureDay(){
+            return departureDay;
+        }
+
+        public void setDepartureDay(Integer day){
+            this.departureDay = day;
+        }
+
+
     }
 
     private class PQNode implements Comparable<PQNode> {
         PQNode previous;
         Flight flight;
         double distance;
+        double[] info = new double[3];
+        int priority;
 
-        public PQNode(Flight flight, PQNode previous, double distance) {
+        public PQNode( Flight flight, PQNode previous, double prevTotal, double flightTime, double price, double totalTime, int priority) {
             this.flight = flight;
             this.previous = previous;
-            this.distance = distance;
+            this.info[0] = flightTime;
+            this.info[1] = price;
+            this.info[2] = totalTime;
+            this.priority = priority;
+            this.distance = info[priority] + prevTotal;
         }
 
         public int compareTo(PQNode o) {
             return Double.valueOf(distance).compareTo(o.distance);
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
     //estas listas se usan para no tener que recorrer cada vez que quiero saber el precio total del viaje almacenado
     private class PriceList extends ArrayList<Flight> {
 
@@ -593,10 +593,52 @@ public class AirTrafficController implements AirTrafficControllerInterface{
         current.visited = false;
     }
 
+<<<<<<< Updated upstream
     public String receiveFlightInsertion(String airline, int flightNum, List<Integer> weekDays, String origin, String destination,
                                   String departureTime, int duration, double price){ return null;}
 
     public String receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays){return null;}
 
     public String receiveWorldTrip(String origin, String priority, List<Integer> weekDays){return null;}
+=======
+    class RequestResult{
+        boolean success;
+        List<Flight> route;
+        double price;
+        double totalTime;
+        double flightTime;
+
+        public RequestResult() {
+            success = false;
+            route = null;
+            price = 0;
+            totalTime = 0;
+            flightTime = 0;
+        }
+
+        public boolean isSuccess() {
+            return success;
+        }
+
+        public List<Flight> getRoute() {
+            return route;
+        }
+
+        public double getPrice() {
+            return price;
+        }
+
+        public double getTotalTime() {
+            return totalTime;
+        }
+
+        public double getFlightTime() {
+            return flightTime;
+        }
+
+
+
+    }
+
+>>>>>>> Stashed changes
 }

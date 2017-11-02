@@ -53,7 +53,7 @@ public interface AirTrafficControllerInterface {
      * @return String representing whether rhe action could be performed of not.
      * Terminal will print whatever it gets
      */
-    String receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays);
+    AirTrafficController.RequestResult receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays);
 
     /**
      * Receives 'worldTrip' instruction from terminal and calls the right method according to the priority

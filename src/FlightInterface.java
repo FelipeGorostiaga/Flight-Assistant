@@ -19,6 +19,6 @@ public interface FlightInterface {
 
     double getPrice();
 
-
+    Integer getDepartureDay();
 
 }
