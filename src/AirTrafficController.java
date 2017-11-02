@@ -593,14 +593,14 @@ public class AirTrafficController implements AirTrafficControllerInterface{
         current.visited = false;
     }
 
-<<<<<<< Updated upstream
+
     public String receiveFlightInsertion(String airline, int flightNum, List<Integer> weekDays, String origin, String destination,
                                   String departureTime, int duration, double price){ return null;}
 
-    public String receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays){return null;}
+
 
     public String receiveWorldTrip(String origin, String priority, List<Integer> weekDays){return null;}
-=======
+
     class RequestResult{
         boolean success;
         List<Flight> route;
@@ -640,5 +640,4 @@ public class AirTrafficController implements AirTrafficControllerInterface{
 
     }
 
->>>>>>> Stashed changes
 }
