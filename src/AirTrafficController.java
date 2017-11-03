@@ -6,10 +6,8 @@ import java.nio.channels.IllegalChannelGroupException;
 import java.sql.Time;
 import java.util.*;
 
+public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
 
-public class AirTrafficController /*implements AirTrafficControllerInterface*/{
-
-    private static final int DAY_TIME = 24 * 60;
     private static final int FLIGHT_TIME = 0;
     private static final int PRICE = 1;
     private static final int TOTAL_TIME = 2;
@@ -373,6 +371,16 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/{
             return null;
         else
             return minList;
+    }
+
+    boolean receiveFlightInsertion(String airline, int flightNum, List<Integer> weekDays, String origin, String destination,
+                                   int departureTime, int duration, double price) {
+        Airport orig = airports.get(origin);
+        Airport dest = airports.get(destination);
+        if(orig == null || dest == null) { return false; }
+        else {
+            return insertFlight(airline, flightNum, orig, dest, weekDays, duration, departureTime, price);
+        }
     }
 
 

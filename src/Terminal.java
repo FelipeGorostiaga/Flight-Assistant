@@ -141,8 +141,12 @@ public class Terminal {
             if(valid && (longitude < -180.0 || longitude > 180.0)) {
                 System.out.println("Longitude is out of range. It must be a real number between -180 and 180)");
             } else {
-                atc.insertAirport((String)words.get(2),latitude,longitude);
-                System.out.println("SYNTAX SUCCESS!!");
+                boolean success = atc.insertAirport((String)words.get(2),latitude,longitude);
+                if(success) {
+                    System.out.println("Airport successfully inserted");
+                } else {
+                    System.out.println("Instruction ignored. Airport is already registered");
+                }
                 return true;
             }
         }
@@ -204,6 +208,7 @@ public class Terminal {
                 i += depTime.length() + 1;
                 valid = isADayTime(depTime);
                 if (valid) {
+                    int deptimeInt =depTimeToInt(depTime);
                     String duration = getStringUntilChar(chars, i, ' ');
                     i += duration.length() + 1;
                     String price = getStringUntilChar(chars, i, '\0');
@@ -212,10 +217,13 @@ public class Terminal {
                         Double doublePrice = validatePrice(price);
                         valid = valid && (time != -1) && (doublePrice != null);
                         if (valid) {
-                            RequestResult rr = atc.receiveFlightInsertion((String) words.get(1), (Integer) words.get(2), dayList,
-                                    origin, destination, depTime, time, doublePrice);
-
-                            System.out.println("SYNTAX SUCCESS!!");
+                            boolean success = atc.receiveFlightInsertion((String) words.get(2), (Integer) words.get(3),
+                                    dayList, origin, destination, deptimeInt, time, doublePrice);
+                            if(success) {
+                                System.out.println("Flight was successfully inserted");
+                            } else {
+                                System.out.println("Flight could not be added. One or both airports may not be registered");
+                            }
                         } else {
                             System.out.println("Price format is invalid");
                         }
@@ -340,8 +348,12 @@ public class Terminal {
             i += airport.length() + 1;
             words.add(airport);
             if(isAValidAirportName(airport)) {
-                atc.deleteAirport(airport);
-                System.out.println("SYNTAX SUCCESS!!");
+                boolean success = atc.deleteAirport(airport);
+                if(success) {
+                    System.out.println("Airport has been successfully deleted");
+                } else {
+                    System.out.println("Action could not be completed, airport may not be registered");
+                }
             } else {
                 System.out.println("Airport names should contain exactly three alphabetic characters");
             }
@@ -351,10 +363,10 @@ public class Terminal {
             String thirdWord = getStringUntilChar(chars, i, '\0');
             if(thirdWord.equals("airport")) {
                 atc.deleteAllAirports();
-                System.out.println("SYNTAX SUCCESS!!");
+                System.out.println("All airports have been successfully deleted");
             } else if(thirdWord.equals("flight")) {
                 atc.deleteAllFlights();
-                System.out.println("SYNTAX SUCCESS!!");
+                System.out.println("All flights have been successfully deleted");
             }
         }
     }
@@ -373,8 +385,12 @@ public class Terminal {
         }
         if(validNumber) {
             if (isAValidAirlineName(airlineName)) {
-                atc.deleteFlight(airlineName, num);
-                System.out.println("SYNTAX SUCCESS!!");
+                boolean success = atc.deleteFlight(airlineName, num);
+                if(success) {
+                    System.out.println("Flight successfully deleted");
+                } else {
+                    System.out.println("Instruction ignored. Flight was not found");
+                }
             } else {
                 System.out.println("Invalid airline name input format");
             }
@@ -554,16 +570,70 @@ public class Terminal {
             List<Integer> days = checkWeekDays(weekDays);
             words.add(days);
             if(days != null) {
+                RequestResult rr = null;
                 if(words.get(0).equals("findRoute")) {
-                    atc.receiveFindRoute((String)words.get(1), (String)words.get(2), (String)words.get(3),(ArrayList<Integer>)words.get(4));
-                    System.out.println("SYNTAX SUCCESS!!");
+                    rr = atc.receiveFindRoute((String)words.get(1), (String)words.get(2), (String)words.get(3),(ArrayList<Integer>)words.get(4));
                 } else if(words.get(0).equals("worldTrip")) {
-                    atc.receiveWorldTrip((String)words.get(1), (String)words.get(2), (ArrayList<Integer>)words.get(3));
-                    System.out.println("SYNTAX SUCCESS!!");
+                    //rr = atc.receiveWorldTrip((String)words.get(1), (String)words.get(2), (ArrayList<Integer>)words.get(3));
                 }
+                requestResultOutput(rr);
             }
         } else {
             System.out.println("Invalid priority parameter");
+        }
+    }
+
+    private void requestResultOutput(RequestResult rr) {
+        if (output.equals("stdout")) {
+            if (format.equals("text")) {
+                routeTextStd(rr);
+            } else {
+                  //KML to standard output  PATON
+            }
+        } else {
+            if(format.equals("text")) {
+                routeTextFile(rr);
+            } else {
+                //KML to file PATON
+            }
+        }
+    }
+
+    private void routeTextStd(RequestResult rr) {
+        int totalMinutes = (int)rr.getTotalTime()%60;
+        int totalHours = (int)rr.getTotalTime()/60;
+        int flightMinutes = (int)rr.getFlightTime()%60;
+        int flightHours = (int)rr.getFlightTime()/60;
+        System.out.println("Your search was successful. Here is your itinerary:");
+        System.out.println("");
+        System.out.println("Total price: $" + rr.getPrice());
+        System.out.println("Total time: " + totalHours + " hours, " + totalMinutes + " minutes");
+        System.out.println("Flight time: " + flightHours + " hours, " + flightMinutes + " minutes");
+        System.out.println("Your route:");
+        for(Flight flight: rr.getRoute()) {
+            System.out.println(flight.getOrigin().getName() + " ----> " + flight.getDestination().getName() + " (flying with " + flight.getAirline() + ")");
+        }
+    }
+
+    private void routeTextFile(RequestResult rr) {
+        PrintWriter fileOutput = null;
+        try {
+            fileOutput = new PrintWriter(new FileWriter(output));
+        } catch (IOException E) {
+            System.out.println("Unexpected output exception");
+        }
+        int totalMinutes = (int)rr.getTotalTime()%60;
+        int totalHours = (int)rr.getTotalTime()/60;
+        int flightMinutes = (int)rr.getFlightTime()%60;
+        int flightHours = (int)rr.getFlightTime()/60;
+        fileOutput.println("Your search was successful. Here is your itinerary:");
+        fileOutput.println("");
+        fileOutput.println("Total price: $" + rr.getPrice());
+        fileOutput.println("Total time: " + totalHours + " hours, " + totalMinutes + " minutes");
+        fileOutput.println("Flight time: " + flightHours + " hours, " + flightMinutes + " minutes");
+        fileOutput.println("Your route:");
+        for(Flight flight: rr.getRoute()) {
+            fileOutput.println(flight.getOrigin() + " ----> " + flight.getDestination() + " (flying with " + flight.getAirline() + ")");
         }
     }
 
@@ -663,10 +733,36 @@ public class Terminal {
                     counting = true;
                 }
             }
-            if(decimalDigits == 2 && priceDouble >= 0.0) {
+            if(decimalDigits <= 2 && priceDouble >= 0.0) {
                 return priceDouble;
             }
         }
         return null;
+    }
+
+    private int depTimeToInt(String deptime) {
+        String hours = new String();
+        String minutes = new String();
+        boolean hs = true;
+        for(int i = 0; i < deptime.length(); i++) {
+            if(hs) {
+                if(deptime.charAt(i) == ':') {
+                    hs = false;
+                } else {
+                    hours += deptime.charAt(i);
+                }
+            } else {
+                minutes += deptime.charAt(i);
+            }
+        }
+        int intH = 0;
+        int intM = 0;
+        try {
+            intH = Integer.parseInt(hours);
+            intM = Integer.parseInt(minutes);
+        } catch (NumberFormatException e) {
+            System.out.println("Error parsing departure");
+        }
+        return intM+intH*60;
     }
 }

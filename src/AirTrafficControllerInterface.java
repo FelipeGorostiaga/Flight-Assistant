@@ -41,8 +41,9 @@ public interface AirTrafficControllerInterface {
      * @param price
      * @return String inicating whether the insertion could be done or not
      */
-    String receiveFlightInsertion(String airline, int flightNum, List<Integer> weekDays, String origin, String destination,
-                           String departureTime, int duration, double price);
+
+    boolean receiveFlightInsertion(String airline, int flightNum, List<Integer> weekDays, String origin, String destination,
+                           int departureTime, int duration, double price);
 
     /**
      * Receives 'findRoute' instruction with params form terminal
@@ -63,5 +64,5 @@ public interface AirTrafficControllerInterface {
      * @return String representing whether rhe action could be performed of not.
      * Terminal will print whatever it gets
      */
-    String receiveWorldTrip(String origin, String priority, List<Integer> weekDays);
+    RequestResult receiveWorldTrip(String origin, String priority, List<Integer> weekDays);
 }
