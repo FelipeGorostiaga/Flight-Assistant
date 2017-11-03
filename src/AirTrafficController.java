@@ -6,8 +6,19 @@ import java.nio.channels.IllegalChannelGroupException;
 import java.sql.Time;
 import java.util.*;
 
-public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
+/**
+ * Handler for all airports and flights, controls air traffic system.
+ *
+ * Keeps track of all airports and flights, as well as finds the optimal route between two
+ * airports given a priority constraint
+ *
+ * @see Airport
+ * @see Flight
+ * @see RequestResult
+ */
+public class AirTrafficController /*implements AirTrafficControllerInterface*/{
 
+    private static final int DAY_TIME = 24 * 60;
     private static final int FLIGHT_TIME = 0;
     private static final int PRICE = 1;
     private static final int TOTAL_TIME = 2;
@@ -15,6 +26,50 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
     private List<Airport> airportList = new ArrayList<>();
     private HashMap<String,Airport> airports = new HashMap<>();
 
+    //Node for use in PriorityQueues while finding optimal routes
+    //Contains info about flights and the search
+    private class PQNode implements Comparable<PQNode> {
+        PQNode previous;
+        Flight flight;
+        double distance;
+        double[] info = new double[3];
+        int priority;
+
+        public PQNode( Flight flight, PQNode previous, double prevTotal, double flightTime, double price, double totalTime, int priority) {
+            this.flight = flight;
+            this.previous = previous;
+            this.info[FLIGHT_TIME] = flightTime;
+            this.info[PRICE] = price;
+            this.info[TOTAL_TIME] = totalTime;
+            this.priority = priority;
+            this.distance = info[priority] + prevTotal;
+        }
+
+        public int compareTo(PQNode o) {
+            return Double.valueOf(distance).compareTo(o.distance);
+        }
+    }
+
+
+
+
+
+//****************************************   SYSTEM MANAGEMENT FUNCTIONS ************************************************
+
+
+    /**
+     * Adds a flight to its origin airports' flight hashmap
+     *
+     * @param airline   name of airline
+     * @param number    flight number
+     * @param origin    origin City
+     * @param destination   destination city
+     * @param departureDays days of the week the flight leaves the origin city
+     * @param duration  length of flight
+     * @param departureTime time flight leaves from origin city
+     * @param price price of flight
+     * @return  true if flight was successfully inserted into system
+     */
     public boolean insertFlight(String airline, Integer number, Airport origin, Airport destination, List<Integer> departureDays, Integer duration, Integer departureTime, double price) {
         Airport start = airports.get(origin.getName());
         Airport end = airports.get(destination.getName());
@@ -30,6 +85,14 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
         return false;
     }
 
+    /**
+     * Inserts airport into existing list of airports
+     *
+     * @param name  three letter name of airport
+     * @param latitude
+     * @param longitude
+     * @return  true if the airport was successfully inserted into the list
+     */
     public boolean insertAirport(String name, double latitude, double longitude) {
         if(!airports.containsKey(name)){
             Airport airport = new Airport(name, latitude, longitude);
@@ -40,6 +103,12 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
         return false;
     }
 
+    /**
+     * Removes an airport from the list of airports
+     *
+     * @param name  three letter name of airport
+     * @return  true if removal was successful
+     */
     public boolean deleteAirport(String name) {
         Airport aux = airports.get(name);
         if(aux == null){
@@ -61,6 +130,9 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
         return true;
     }
 
+    /**
+     * Removes all temporary marking variables used in searches from airports.
+     */
     private void clearMarks(){
         for(Airport airport : airportList){
             airport.setVisited(false);
@@ -68,7 +140,13 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
         }
     }
 
-
+    /**
+     * Removes a flight from the list of airports
+     *
+     * @param airline  name of airline
+     * @param number   flight number
+     * @return  true if removal was successful
+     */
     public boolean deleteFlight(String airline, Integer number) {
         String name = airline + number;
         for(Airport airport: airportList){
@@ -86,22 +164,37 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
         return false;
     }
 
+    /**
+     * Inserts a list of airports into master list
+     * @param airports List of airports to be added
+     */
     public void insertAllAirports(List<Airport> airports) {
         for(Airport airport: airports){
             insertAirport(airport.getName(), airport.getLatitude(), airport.getLongitude());
         }
     }
 
+    /**
+     * Clears all airports from list by creating a new empty hashmap
+     */
     public void deleteAllAirports() {
         airports = new HashMap<>();
         airportList = new ArrayList<>();
     }
 
+    /**
+     * Replaces all existing airports by first clearing the existing list and setting the new list to be the master
+     * @param airports New list of airports to be made into the master list
+     */
     public void replaceAllAirports(List<Airport> airports) {
         deleteAllAirports();
         insertAllAirports(airports);
     }
 
+    /**
+     * Inserts a list of flights into the hashmaps of their respective origin airports
+     * @param flights
+     */
     public void insertAllFlights(List<Flight> flights) {
         for(Flight flight : flights){
             insertFlight(flight.getAirline(), flight.getNumber(),  flight.getOrigin() , flight.getDestination(),
@@ -109,6 +202,9 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
         }
     }
 
+    /**
+     * Deletes all flights by clearing the flight list and hashmap of all airports
+     */
     public void deleteAllFlights() {
         for(Airport airport : airportList){
             airport.setFlights(new HashMap<>());
@@ -116,6 +212,10 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
         }
     }
 
+    /**
+     * Replaces all flights by clearing all flight information from airports, then inserting the new flights
+     * @param flights
+     */
     public void replaceAllFlights(List<Flight> flights) {
         deleteAllFlights();
         insertAllFlights(flights);
@@ -123,6 +223,19 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
     }
 
 
+//****************************************   SYSTEM TASK FUNCTIONS ************************************************
+
+    /**
+     * Kicks off the search for an optimum route between two airports, given a priority of total time, flight time, or cost of the trip.
+     *
+     * @param origin    airport from which the trip begins
+     * @param destination   airport at which the trip ends
+     * @param priority  the variable for which the optimal route will be found
+     * @param weekDays  days of the week the trip can begin
+     * @return  a Request Result describing the trip's status, route, cost, and times
+     *
+     * @see RequestResult
+     */
     public RequestResult receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays) {
         RequestResult ret = new RequestResult();
         switch(priority){
@@ -134,13 +247,22 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
         return ret;
     }
 
-
+    /**
+     * Implements a search for an optimal route between two airports by using a priority queue and backtracking
+     *
+     * @param origin    airport from which the trip begins
+     * @param destination   airport at which the trip ends
+     * @param priority  the variable for which the optimal route will be found
+     * @param departureDays days on which the trip can begin
+     * @param ret   the working RequestResult of the trip
+     * @return  The
+     */
     public RequestResult findRouteMinPriority(Airport origin, Airport destination,
                                                 int priority, List<Integer> departureDays, RequestResult ret) {
         PriorityQueue<PQNode> pq = new PriorityQueue<>();
         clearMarks();
         origin.setVisited(true);
-          /*check if we route can be started on requested days*/
+          /*check if the route can be started on requested days*/
         for(Flight flight : origin.getFlights()){
             for(Integer day: departureDays){
                 if(flight.getDepartureDays().contains(day)){
@@ -177,7 +299,14 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
     }
 
 
-
+    /**
+     * Recreates the optimal route by stepping through the priority queue of routes, then creating a RequestResult and giving it the route
+     *
+     * @param node  the node at which the destination airport was reached
+     * @param origin    the original origin airport of the trip
+     * @param ret   the working RequestResult of the route
+     * @return  the final RequestResult
+     */
     RequestResult routePlanner(PQNode node, Airport origin, RequestResult ret){
         LinkedList<Flight> route = new LinkedList<>();
         ret.setTotalTime(node.info[TOTAL_TIME]);
@@ -200,36 +329,6 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
     public List<Flight> worldTripMinTotalTime() {
         return null;
     }
-
-
-
-    private class PQNode implements Comparable<PQNode> {
-        PQNode previous;
-        Flight flight;
-        double distance;
-        double[] info = new double[3];
-        int priority;
-
-        public PQNode( Flight flight, PQNode previous, double prevTotal, double flightTime, double price, double totalTime, int priority) {
-            this.flight = flight;
-            this.previous = previous;
-            this.info[FLIGHT_TIME] = flightTime;
-            this.info[PRICE] = price;
-            this.info[TOTAL_TIME] = totalTime;
-            this.priority = priority;
-            this.distance = info[priority] + prevTotal;
-        }
-
-        public int compareTo(PQNode o) {
-            return Double.valueOf(distance).compareTo(o.distance);
-        }
-    }
-
-
-
-
-
-
 
 
 
@@ -371,16 +470,6 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/ {
             return null;
         else
             return minList;
-    }
-
-    boolean receiveFlightInsertion(String airline, int flightNum, List<Integer> weekDays, String origin, String destination,
-                                   int departureTime, int duration, double price) {
-        Airport orig = airports.get(origin);
-        Airport dest = airports.get(destination);
-        if(orig == null || dest == null) { return false; }
-        else {
-            return insertFlight(airline, flightNum, orig, dest, weekDays, duration, departureTime, price);
-        }
     }
 
 
