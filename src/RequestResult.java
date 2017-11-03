@@ -1,5 +1,12 @@
 import java.util.List;
 
+/**
+ * Return object used in searching an optimal route.
+ *
+ * Contains useful information about the success of the search, the route it took, price, time in the air and total time.
+ *
+ * @see Flight
+ */
 public class RequestResult {
     private boolean success;
     private List<Flight> route;
