@@ -2,6 +2,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Airport in the air traffic system.
+ *
+ * Contains information about the airport's latitude, longitude, and its set of departing flights
+ *
+ * @see Flight
+ */
 public class Airport implements AirportInterface {
 
     private static final int DAY_TIME = 24 * 60;
