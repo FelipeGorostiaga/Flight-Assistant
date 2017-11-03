@@ -1,5 +1,13 @@
 import java.util.List;
 
+/**
+ * Flight in the air traffic system.
+ *
+ * Contains info about the airport from which it departs and where it arrives, it's airline and number, as well as the days of the week it leaves,
+ * the price and length.
+ *
+ * @see Airport
+ */
 public class Flight implements FlightInterface {
 
     private String airline;
