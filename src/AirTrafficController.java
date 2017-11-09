@@ -322,187 +322,114 @@ public class AirTrafficController /*implements AirTrafficControllerInterface*/{
         return ret;
     }
 
-    public List<Flight> worldTripMinPrice() {
-        return null;
-    }
+    public RequestResult worldTrip(List<Integer> departureDays, int priority) {
 
-    public List<Flight> worldTripMinTotalTime() {
-        return null;
-    }
-
-
-
-
-
-
-
-    //estas listas se usan para no tener que recorrer cada vez que quiero saber el precio total del viaje almacenado
-    private class PriceList extends ArrayList<Flight> {
-
-        private double price;
-
-        public double getPrice() {
-            return price;
-        }
-
-        public void setPrice(double price) {
-            this.setPrice(price);
-        }
-
-    }
-    private class DurationList extends ArrayList<Flight> {
-
-        private int duration;
-
-        public int getDuration() {
-            return duration;
-        }
-
-        public void setDuration(double price) {
-            this.duration = duration;
-        }
-
-    }
-
-
-    public PriceList worldTripPrice(List<Integer> departureDays) {
-
-        clearMarks();
         int size = airportList.size();
 
-        List<Flight> route = Arrays.asList(new Flight[size]);   // lista con tamano igual al numero de aeropuertos para guardar el camino por nivel
-        PriceList minList = new PriceList();                 //lista que alamcena el minimo recorrido de los minimos recorridos por nodo
-        PriceList minRoute = new PriceList();  //lista que se almacena la mejor vuelta al mundo para ese nodo.
+        RequestResult optimalResult = new RequestResult();
 
-        //Necesito un metodo que agarre todos los aeropuertos que tengan vuelos que salgan en algunos de los que estan en departureDays
-        //y itero en el for-each con estos aeropuertos, no con todos.
 
-        for (Airport airport : airportList) {
+        for(Airport airport : airportList) {
+            for(Flight flight : airport.getFlights()) {
+                for(Integer day : flight.departureDays) {
 
-            minRoute.clear();
-            worldTripPrice(airport, airport, 0, size, route, minRoute, 0);
+                    if(departureDays.contains(day)) {
 
-            //Si se consiguio una vuelta al mundo valida con este nodo y su precio es menor a alguno encontrado previamente, se le asigna a minList.
-            if(!minRoute.isEmpty()) {
-                if(minList.isEmpty() || minRoute.getPrice() < minList.getPrice()) {
-                    minList.clear();
-                    minList.addAll(minRoute);
-                    minList.setPrice(minRoute.getPrice());
+                        RequestResult rr = new RequestResult(size);
+                        rr.setFlightTime(flight.duration);
+                        rr.setPrice(flight.price);
+                        rr.setTotalTime(flight.duration);
+                        rr.getRoute().add(0,flight);
+
+                        WeekTime wt = new WeekTime(day,flight.departureTime); //dia y minuto en el que comienza la vuelta al mundo.
+                        wt.addMinutes(flight.duration);
+
+                        worldTrip(flight.destination, airport, size - 1, 1, wt, priority, rr, optimalResult);
+                    }
                 }
+
             }
 
         }
-        if(minList.isEmpty()) //ver por comodidad de la terminal si prefiere una lista vacia o null.
-            return null;
+
+        if(optimalResult.isSuccess())
+            return optimalResult;
+
         else
-            return minList;
+            return null; //No se encontro una vuelta al mundo valida.
+
     }
-       /*
-            size: es el total de nodos en el grafo, se va restando uno en cada recursion.
-            level: es la profundidad de la recursion para saber donde escribir en la lista
-            route: camino actual en la recursion
-            minRoute: camino optimo encontrado
-         */
 
-    private void worldTripPrice(Airport current, Airport origin, int level, int size, List<Flight> route, PriceList minRoute, double price) {
 
-        if (size == 1)
-            origin.setVisited(false);
 
-        current.setVisited(true);
+    private void worldTrip(Airport current, Airport origin, int size, int level, WeekTime wt, int priority, RequestResult result, RequestResult optimal ) {
 
-        for (Flight flight : current.getFlights()) {
 
-            if (!flight.getDestination().isVisited()) {
+        if(size == 0) {
+            if(!optimal.isSuccess() || foundOptimal(result,optimal,priority)) {
 
-                //se completa el ciclo hamiltoniano
-                if (flight.getDestination().equals(origin)) {
-                    if (minRoute.isEmpty() || ((price + flight.getPrice()) < minRoute.getPrice())) {
+                optimal = result;
+                optimal.setSuccess(true);
+                return;
+            }
+        }
 
-                        minRoute.clear();
-                        route.add(level + 1, flight);  //se agrega el vuelo que vuelve al nodo origen.
-                        minRoute.addAll(route);
-                        minRoute.setPrice(price + flight.getPrice());
-                    }
+        if(size == 1)
+            origin.visited = false;
+
+
+
+        current.visited = true;
+
+        for(Flight flight : current.getFlights()) {
+
+            if (!flight.destination.visited) {
+
+                for (Integer day : flight.getDepartureDays()) {
+
+                        int cantMin;
+                        WeekTime dayAfterFlight = new WeekTime(wt.getDay(), wt.getMinute());
+                        cantMin = wt.calcMinutes(day, flight.departureTime) + flight.duration;
+                        dayAfterFlight.addMinutes(cantMin);
+
+                        if (!optimal.isSuccess() || validPriorityCondition(result, optimal, priority, flight, cantMin)) {
+
+                            result.getRoute().add(level, flight);
+                            result.getDays().add(level, day);
+
+                            RequestResult nextRR = result.cloneAndAdd(flight.duration, cantMin, flight.price);
+
+                            worldTrip(flight.destination, origin, size - 1, level + 1, dayAfterFlight, priority, nextRR, optimal);
+                        }
                 }
-                //la lista que almacena la mejor ruta esta vacia o no esta vacia y todavia no me pase del minimo que tengo
-                else {
-                    if((minRoute.isEmpty()) || (minRoute.getPrice() > (price + flight.getPrice()))) {
-
-                    route.add(level, flight);
-                    worldTripPrice(flight.getDestination(), origin, level + 1, size - 1, route, minRoute, price + flight.getPrice());
-                    }
-                }
-
 
             }
         }
 
-        current.setVisited(false);
+        current.visited = false;
 
     }
 
 
-    public DurationList worldTripFlightTime(List<Integer> departureDays) {
+    private boolean validPriorityCondition(RequestResult result, RequestResult optimal, int priority, Flight flight, int cantMin) {
 
-        clearMarks();
-        int size = airportList.size();
-
-        List<Flight> route = Arrays.asList(new Flight[size]);
-        DurationList minList = new DurationList();
-        DurationList minRoute = new DurationList();
-
-        for (Airport airport : airportList) {
-
-            minRoute.clear();
-            worldTripFlightTime(airport, airport, 0, size, route, minRoute, 0);
-
-            if(!minRoute.isEmpty()) {
-                if(minList.isEmpty() || minRoute.getDuration() < minList.getDuration()) {
-                    minList.clear();
-                    minList.addAll(minRoute);
-                    minList.setDuration(minRoute.getDuration());
-                }
+            switch(priority) {
+                case FLIGHT_TIME: return (result.getFlightTime() + flight.getDuration()) < optimal.getFlightTime();
+                case PRICE: return (result.getPrice() + flight.getPrice()) < optimal.getPrice();
+                case TOTAL_TIME: return (result.getTotalTime() + cantMin) < optimal.getTotalTime();
+                default: return false;
             }
-
-        }
-        if(minList.isEmpty()) //ver por comodidad de la terminal si prefiere una lista vacia o null.
-            return null;
-        else
-            return minList;
     }
 
+    private boolean foundOptimal(RequestResult result, RequestResult optimal, int priority) {
 
-    private void worldTripFlightTime(Airport current, Airport origin, int level, int size, List<Flight> route, DurationList minRoute, Integer duration) {
-
-        if (size == 1)
-            origin.setVisited(false); //habilito que se pueda volver al nodo origen en caso de que exista el vuelo
-
-        current.setVisited(true);
-
-        for (Flight flight : current.getFlights()) { //recorro la lista de vuelos del aeropuerto (DFS)
-
-            if (!flight.getDestination().isVisited()) {
-
-                if (flight.getDestination().equals(origin)) {
-
-                    if(minRoute.isEmpty() || ((duration + flight.getDuration()) < minRoute.getDuration()) ) {
-
-                        minRoute.clear();
-                        route.add(level + 1, flight);  //se agrega el vuelo que vuelve al nodo origen.
-                        minRoute.addAll(route);
-                        minRoute.setDuration(duration + flight.getDuration());
-                    }
-                }
-                else {
-                    if (minRoute.isEmpty() || minRoute.getDuration() > (duration + flight.getDuration())) {
-                        route.add(level, flight);
-                        worldTripFlightTime(flight.getDestination(), origin, level + 1, size - 1, route, minRoute, duration + flight.getDuration());
-                    }
-                }
-
-            }
+        switch(priority) {
+            case FLIGHT_TIME: return result.getFlightTime() < optimal.getFlightTime();
+            case PRICE: return result.getPrice() < optimal.getPrice();
+            case TOTAL_TIME: return result.getTotalTime() < optimal.getTotalTime();
+            default:return false;
         }
-        current.setVisited(false);
+
     }
+
 }
