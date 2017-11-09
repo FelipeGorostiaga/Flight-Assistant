@@ -21,13 +21,10 @@ public interface AirTrafficControllerInterface {
     void replaceAllFlights(List<Flight> flights);
 
 
-    List<Flight> findRouteMinFlightTime(Airport origin, Airport destiny, List<Integer> departureDays);
-    List<Flight> findRouteMinPrice(Airport origin, Airport destiny, List<Integer> departureDays);
-    List<Flight> findRouteMinTotalTime(Airport origin, Airport destiny, List<Integer> departureDays);
+    RequestResult findRouteMinPriority(Airport origin, Airport destination,
+                                      int priority, List<Integer> departureDays, RequestResult ret);
 
-    List<Flight> worldTripMinFlightTime();
-    List<Flight> worldTripMinPrice();
-    List<Flight> worldTripMinTotalTime();
+    RequestResult worldTrip(List<Integer> departureDays, int priority);
 
     /**
      * Receives flight insert instruccion from terminal
@@ -55,14 +52,4 @@ public interface AirTrafficControllerInterface {
      * Terminal will print whatever it gets
      */
     RequestResult receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays);
-
-    /**
-     * Receives 'worldTrip' instruction from terminal and calls the right method according to the priority
-     * @param origin origin airport
-     * @param priority priority chosen by user
-     * @param weekDays List of integers representing days
-     * @return String representing whether rhe action could be performed of not.
-     * Terminal will print whatever it gets
-     */
-    RequestResult receiveWorldTrip(String origin, String priority, List<Integer> weekDays);
 }

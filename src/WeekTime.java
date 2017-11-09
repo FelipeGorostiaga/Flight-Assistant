@@ -1,5 +1,7 @@
  public class WeekTime {
 
+        private static final int DAY_TIME = 24 * 60;
+
         private int day;
         private int minute;
 
