@@ -35,14 +35,14 @@ public class AirTrafficController implements AirTrafficControllerInterface {
         double[] info = new double[3];
         int priority;
 
-        public PQNode( Flight flight, PQNode previous, double prevTotal, double flightTime, double price, double totalTime, int priority) {
+        public PQNode( Flight flight, PQNode previous, double flightTime, double price, double totalTime, int priority) {
             this.flight = flight;
             this.previous = previous;
             this.info[FLIGHT_TIME] = flightTime;
             this.info[PRICE] = price;
             this.info[TOTAL_TIME] = totalTime;
             this.priority = priority;
-            this.distance = info[priority] + prevTotal;
+            this.distance = info[priority];
         }
 
         public int compareTo(PQNode o) {
@@ -281,7 +281,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
             for(Integer day: departureDays){
                 if(flight.getDepartureDays().contains(day)){
                     flight.setDepartureDay(day);
-                    pq.offer(new PQNode(new Flight(flight) , null, 0, flight.getDuration(),flight.getPrice(), flight.getDuration(), priority));
+                    pq.offer(new PQNode(new Flight(flight) , null, flight.getDuration(),flight.getPrice(), flight.getDuration(), priority));
                     if(priority != TOTAL_TIME){
                         break;
                     }
@@ -290,6 +290,9 @@ public class AirTrafficController implements AirTrafficControllerInterface {
         }
         while(!pq.isEmpty()){
             PQNode pqnode = pq.poll();
+            System.out.println("-------------Priority " + pqnode.priority + "Flight ");
+            System.out.println( pqnode.flight + "Price " + pqnode.info[PRICE] + "TotalTIme "+ pqnode.info[TOTAL_TIME] + "FlightTime" + pqnode.info[FLIGHT_TIME]);
+            System.out.println("DISTANCE " + pqnode.distance);
             Airport currentAirport = pqnode.flight.getDestination();
             if(!currentAirport.isVisited() || priority == TOTAL_TIME){
                 currentAirport.setOrigin(pqnode.flight.getOrigin());
@@ -302,7 +305,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
                         /*gets time waiting for connection*/
                         Integer waitingTime = currentAirport.getConnectionTime(pqnode.flight.getDepartureDay(), pqnode.flight, flight);
                         /*inserts Priority Queue Node with copy of flight */
-                        pq.offer(new PQNode(new Flight(flight), pqnode, pqnode.distance , flight.getDuration() + pqnode.info[FLIGHT_TIME],
+                        pq.offer(new PQNode(new Flight(flight), pqnode, flight.getDuration() + pqnode.info[FLIGHT_TIME],
                                 flight.getPrice() + pqnode.info[PRICE], pqnode.info[TOTAL_TIME] + waitingTime + flight.getDuration(), priority));
                     }
                 }

@@ -111,6 +111,7 @@ public class Terminal {
         if(isAValidAirportName(airport)) {
             return checkCoordinates(chars, i);
         }
+        System.out.println("Invalid airport name");
         return false;
     }
 
