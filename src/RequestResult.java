@@ -18,31 +18,41 @@ public class RequestResult {
 
     public RequestResult() {
         success = false;
-        route = null;
+        route = new LinkedList<Flight>();
         price = 0;
         totalTime = 0;
         flightTime = 0;
+        days = new LinkedList<Integer>();
+
     }
 
-    public RequestResult(int n) {
-        success = false;
-        route = Arrays.asList(new Flight[n]);
-        days = Arrays.asList(new Integer[n]);
-        price = 0;
-        totalTime = 0;
-        flightTime = 0;
+    public RequestResult clone() {
+
+        RequestResult ret = new RequestResult();
+
+        List<Flight> flightList = new LinkedList<Flight>(this.getRoute());
+        List<Integer> daysList = new LinkedList<Integer>(this.getDays());
+        ret.setPrice(this.getPrice());
+        ret.setFlightTime(this.flightTime);
+        ret.setTotalTime(this.totalTime);
+
+        return ret;
     }
 
-    public RequestResult cloneAndAdd(int flightTime, int totalTime, double price) {
+    public void addData(double price, int fduration, int ttime) {
 
-        RequestResult resul = new RequestResult();
-        resul.setPrice(this.getPrice() + price);
-        resul.setTotalTime(this.getTotalTime() + totalTime);
-        resul.setPrice(this.getFlightTime() + flightTime);
-        resul.setRoute(this.getRoute());
-        resul.setDays(this.getDays());
 
-        return resul;
+        this.price  += price;
+        this.flightTime += fduration;
+        this.totalTime += ttime;
+
+    }
+
+    public void removeData(double price, int fduration, int ttime) {
+
+        this.price  -= price;
+        this.flightTime -= fduration;
+        this.totalTime -= ttime;
     }
 
     public List<Integer> getDays() { return days;  }
