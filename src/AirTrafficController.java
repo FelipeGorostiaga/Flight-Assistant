@@ -338,7 +338,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
         ret.setRoute(route);
         return ret;
     }
-
+    
     public RequestResult worldTrip(List<Integer> departureDays, int priority) {
 
         int size = airportList.size();
@@ -351,21 +351,21 @@ public class AirTrafficController implements AirTrafficControllerInterface {
 
                     if(departureDays.contains(day)) {
 
-                        RequestResult rr = new RequestResult(size);
+                        RequestResult rr = new RequestResult();
+
                         rr.setFlightTime(flight.getDuration());
                         rr.setPrice(flight.getPrice());
                         rr.setTotalTime(flight.getDuration());
                         rr.getRoute().add(0,flight);
 
                         WeekTime wt = new WeekTime(day,flight.getDepartureTime()); //dia y minuto en el que comienza la vuelta al mundo.
-                        wt.addMinutes(flight.getDuration());
+                        wt.addMinutes(flight.getDuration());    //dia y minuto despues de tomar el primer vuelo
 
-                        worldTrip(flight.getDestination(), airport, size - 1, 1, wt, priority, rr, optimalResult);
+                        worldTrip(flight.getDestination(), airport, size - 1, wt, priority, rr, optimalResult);
                     }
                 }
 
             }
-
         }
 
         if(optimalResult.isSuccess())
@@ -378,35 +378,53 @@ public class AirTrafficController implements AirTrafficControllerInterface {
 
 
 
-    private void worldTrip(Airport current, Airport origin, int size, int level, WeekTime wt, int priority, RequestResult result, RequestResult optimal ) {
-        if(size == 0) {
+    private void worldTrip(Airport current, Airport origin, int size, WeekTime wt, int priority, RequestResult result, RequestResult optimal ) {
+
+        if(size == 0 && current.equals(origin)) { //el equals esta de mas, si esta bien hecho solo podria ser el nodo origen.
             if(!optimal.isSuccess() || foundOptimal(result,optimal,priority)) {
-                optimal = result;
+
+                optimal = result.clone();
                 optimal.setSuccess(true);
                 return;
             }
         }
+
         if(size == 1)
             origin.setVisited(false);
+
         current.setVisited(true);
+
         for(Flight flight : current.getFlights()) {
             if (!flight.getDestination().isVisited()) {
                 for (Integer day : flight.getDepartureDays()) {
-                        int cantMin;
+
                         WeekTime dayAfterFlight = new WeekTime(wt.getDay(), wt.getMinute());
-                        cantMin = wt.calcMinutes(day, flight.getDepartureTime()) + flight.getDuration();
+
+                        int cantMin = wt.calcMinutes(day, flight.getDepartureTime()) + flight.getDuration();  //cantidad de minutos entre que se aterriza hasta llegar al proximo destino
                         dayAfterFlight.addMinutes(cantMin);
+
                         if (!optimal.isSuccess() || validPriorityCondition(result, optimal, priority, flight, cantMin)) {
-                            result.getRoute().add(level, flight);
-                            result.getDays().add(level, day);
-                            RequestResult nextRR = result.cloneAndAdd(flight.getDuration(), cantMin, flight.getPrice());
-                            worldTrip(flight.getDestination(), origin, size - 1, level + 1, dayAfterFlight, priority, nextRR, optimal);
+
+                            result.getRoute().add(flight);
+                            result.getDays().add(day);
+                            result.addData(flight.getPrice(), flight.getDuration(), cantMin);
+
+
+                            worldTrip(flight.getDestination(), origin, size - 1, dayAfterFlight, priority, result, optimal);
+
+                            result.getRoute().remove(flight); //Backtracking
+                            result.getDays().remove(day);
+                            result.removeData(flight.getPrice(), flight.getDuration(), cantMin);
+
+
                         }
                 }
             }
         }
-        current.setVisited(false);
+
+        current.setVisited(false); //Backtracking
     }
+
 
 
     private boolean validPriorityCondition(RequestResult result, RequestResult optimal, int priority, Flight flight, int cantMin) {
@@ -431,3 +449,4 @@ public class AirTrafficController implements AirTrafficControllerInterface {
     }
 
 }
+   
