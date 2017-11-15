@@ -238,14 +238,18 @@ public class AirTrafficController implements AirTrafficControllerInterface {
      */
     public RequestResult receiveFindRoute(String origin, String destination, String priority, List<Integer> weekDays) {
         RequestResult ret = new RequestResult();
+        Airport start = airports.get(origin);
+        Airport finish = airports.get(destination);
+        if(start == null || finish == null) return ret;
         switch(priority){
-            case "ft": findRouteMinPriority(airports.get(origin), airports.get(destination), FLIGHT_TIME, weekDays, ret); break;
-            case "pr": findRouteMinPriority(airports.get(origin), airports.get(destination), PRICE, weekDays, ret); break;
-            case "tt": findRouteMinPriority(airports.get(origin), airports.get(destination), TOTAL_TIME, weekDays, ret); break;
+            case "ft": findRouteMinPriority(start, finish, FLIGHT_TIME, weekDays, ret); break;
+            case "pr": findRouteMinPriority(start, finish, PRICE, weekDays, ret); break;
+            case "tt": findRouteMinPriority(start, finish, TOTAL_TIME, weekDays, ret); break;
             default: throw new IllegalArgumentException("Not a valid priority");
         }
         return ret;
     }
+
 
     public boolean receiveFlightInsertion(String airline, int flightNum, List<Integer> weekDays, String origin, String destination,
                                    int departureTime, int duration, double price) {
@@ -277,7 +281,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
             for(Integer day: departureDays){
                 if(flight.getDepartureDays().contains(day)){
                     flight.setDepartureDay(day);
-                    pq.offer(new PQNode(new Flight(flight) , null, 0, flight.getDuration(),flight.getPrice(), 0, priority));
+                    pq.offer(new PQNode(new Flight(flight) , null, 0, flight.getDuration(),flight.getPrice(), flight.getDuration(), priority));
                     if(priority != TOTAL_TIME){
                         break;
                     }
@@ -338,7 +342,6 @@ public class AirTrafficController implements AirTrafficControllerInterface {
 
         RequestResult optimalResult = new RequestResult();
 
-
         for(Airport airport : airportList) {
             for(Flight flight : airport.getFlights()) {
                 for(Integer day : flight.getDepartureDays()) {
@@ -373,51 +376,33 @@ public class AirTrafficController implements AirTrafficControllerInterface {
 
 
     private void worldTrip(Airport current, Airport origin, int size, int level, WeekTime wt, int priority, RequestResult result, RequestResult optimal ) {
-
-
         if(size == 0) {
             if(!optimal.isSuccess() || foundOptimal(result,optimal,priority)) {
-
                 optimal = result;
                 optimal.setSuccess(true);
                 return;
             }
         }
-
         if(size == 1)
             origin.setVisited(false);
-
-
-
         current.setVisited(true);
-
         for(Flight flight : current.getFlights()) {
-
             if (!flight.getDestination().isVisited()) {
-
                 for (Integer day : flight.getDepartureDays()) {
-
                         int cantMin;
                         WeekTime dayAfterFlight = new WeekTime(wt.getDay(), wt.getMinute());
                         cantMin = wt.calcMinutes(day, flight.getDepartureTime()) + flight.getDuration();
                         dayAfterFlight.addMinutes(cantMin);
-
                         if (!optimal.isSuccess() || validPriorityCondition(result, optimal, priority, flight, cantMin)) {
-
                             result.getRoute().add(level, flight);
                             result.getDays().add(level, day);
-
                             RequestResult nextRR = result.cloneAndAdd(flight.getDuration(), cantMin, flight.getPrice());
-
                             worldTrip(flight.getDestination(), origin, size - 1, level + 1, dayAfterFlight, priority, nextRR, optimal);
                         }
                 }
-
             }
         }
-
         current.setVisited(false);
-
     }
 
 
