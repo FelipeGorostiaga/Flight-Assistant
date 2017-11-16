@@ -222,6 +222,21 @@ public class AirTrafficController implements AirTrafficControllerInterface {
 
     }
 
+    public void printAirports(){
+        System.out.println("AIRPORT LIST:");
+        for(Airport airport : airportList){
+            System.out.println(airport.getName());
+        }
+    }
+
+    public void printFlights(){
+        System.out.println("FLIGHT LIST:");
+        for(Airport airport : airportList){
+            for(Flight flight : airport.getFlights()){
+                System.out.println(flight);
+            }
+        }
+    }
 
 //****************************************   SYSTEM TASK FUNCTIONS ************************************************
 

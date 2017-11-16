@@ -61,6 +61,9 @@ public class Flight implements FlightInterface {
         }
         return true;
     }
+    public String toString(){
+        return "airline: " +  airline + "//number: " + number + "//origin: " + origin.getName() + "//destination: " + destination.getName();
+    }
 
     public String getName() {
         return airline + number;

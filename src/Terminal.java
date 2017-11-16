@@ -250,11 +250,13 @@ public class Terminal {
      * @param item indicates if the massive insertion involves flights or airports
      */
     private void massiveValidation(char[] chars, int i, String item) {
+        String file = getStringUntilChar(chars, i, ' ');
+        i += file.length() + 1;
         String action = getStringUntilChar(chars, i, '\0');
         boolean fileIsValid = true;
         BufferedReader br = null;
         try{
-           br = new BufferedReader(new FileReader("file.txt"));
+           br = new BufferedReader(new FileReader(file));
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
             fileIsValid = false;
@@ -307,6 +309,8 @@ public class Terminal {
         } catch (IOException e) {
             System.out.println("Aborting. Unexpected input/output exception");
         }
+        atc.printAirports();
+        atc.printFlights();
     }
 
     /**
