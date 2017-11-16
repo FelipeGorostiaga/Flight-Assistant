@@ -29,13 +29,14 @@ public class AirTrafficController implements AirTrafficControllerInterface {
     //Node for use in PriorityQueues while finding optimal routes
     //Contains info about flights and the search
     private class PQNode implements Comparable<PQNode> {
-        PQNode previous;
-        Flight flight;
-        double distance;
-        double[] info = new double[3];
-        int priority;
+        private PQNode previous;
+        private Flight flight;
+        private double distance;
+        private double[] info = new double[3];
+        private int priority;
+        private int departureDay;
 
-        public PQNode( Flight flight, PQNode previous, double flightTime, double price, double totalTime, int priority) {
+        public PQNode( Flight flight, PQNode previous, double flightTime, double price, double totalTime, int priority, int day) {
             this.flight = flight;
             this.previous = previous;
             this.info[FLIGHT_TIME] = flightTime;
@@ -43,6 +44,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
             this.info[TOTAL_TIME] = totalTime;
             this.priority = priority;
             this.distance = info[priority];
+            this.departureDay = day;
         }
 
         public int compareTo(PQNode o) {
@@ -311,8 +313,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
         for(Flight flight : origin.getFlights()){
             for(Integer day: departureDays){
                 if(flight.getDepartureDays().contains(day)){
-                    flight.setDepartureDay(day);
-                    pq.offer(new PQNode(new Flight(flight) , null, flight.getDuration(),flight.getPrice(), flight.getDuration(), priority));
+                    pq.offer(new PQNode(flight , null, flight.getDuration(),flight.getPrice(), flight.getDuration(), priority, day));
                     if(priority != TOTAL_TIME){
                         break;
                     }
@@ -321,9 +322,9 @@ public class AirTrafficController implements AirTrafficControllerInterface {
         }
         while(!pq.isEmpty()){
             PQNode pqnode = pq.poll();
-            System.out.println("-------------Priority " + pqnode.priority + "Flight ");
-            System.out.println( pqnode.flight + "Price " + pqnode.info[PRICE] + "TotalTIme "+ pqnode.info[TOTAL_TIME] + "FlightTime" + pqnode.info[FLIGHT_TIME]);
-            System.out.println("DISTANCE " + pqnode.distance);
+           // System.out.println("-------------Priority " + pqnode.priority + "Flight ");
+           // System.out.println( pqnode.flight + "Price " + pqnode.info[PRICE] + "TotalTIme "+ pqnode.info[TOTAL_TIME] + "FlightTime" + pqnode.info[FLIGHT_TIME]);
+           // System.out.println("DISTANCE " + pqnode.distance);
             Airport currentAirport = pqnode.flight.getDestination();
             if(!currentAirport.isVisited()){
                 currentAirport.setOrigin(pqnode.flight.getOrigin());
@@ -337,10 +338,10 @@ public class AirTrafficController implements AirTrafficControllerInterface {
                 for(Flight flight : currentAirport.getFlights()){
                     if(!flight.getDestination().isVisited()){
                         /*gets time waiting for connection*/
-                        Integer waitingTime = currentAirport.getConnectionTime(pqnode.flight.getDepartureDay(), pqnode.flight, flight);
+                        Integer waitingTime = currentAirport.getConnectionTime(pqnode.departureDay, pqnode.flight, flight);
                         /*inserts Priority Queue Node with copy of flight */
-                        pq.offer(new PQNode(new Flight(flight), pqnode, flight.getDuration() + pqnode.info[FLIGHT_TIME],
-                                flight.getPrice() + pqnode.info[PRICE], pqnode.info[TOTAL_TIME] + waitingTime + flight.getDuration(), priority));
+                        pq.offer(new PQNode(flight, pqnode, flight.getDuration() + pqnode.info[FLIGHT_TIME],
+                                flight.getPrice() + pqnode.info[PRICE], pqnode.info[TOTAL_TIME] + waitingTime + flight.getDuration(), priority, flight.getDepartureDay()));
                     }
                 }
             }
@@ -363,13 +364,17 @@ public class AirTrafficController implements AirTrafficControllerInterface {
         ret.setTotalTime(node.info[TOTAL_TIME]);
         ret.setFlightTime(node.info[FLIGHT_TIME]);
         ret.setPrice(node.info[PRICE]);
+        LinkedList<Integer> stack = new LinkedList<>();
         while(!node.flight.getOrigin().equals(origin)){
             route.push(node.flight);
+            stack.push(node.departureDay);
             node = node.previous;
         }
         route.push(node.flight);
+        stack.push(node.departureDay);
         ret.setSuccess(true);
         ret.setRoute(route);
+        ret.setDays(stack);
         return ret;
     }
     

@@ -31,19 +31,6 @@ public class Flight implements FlightInterface {
         this.origin = origin;
     }
 
-    public Flight(Flight flight){
-        this.airline = flight.airline;
-        this.number = flight.number;
-        this.departureDays = flight.departureDays;
-        this.destination = flight.destination;
-        this.price = flight.price;
-        this.departureTime = flight.departureTime;
-        this.duration = flight.duration;
-        this.origin = flight.origin;
-        this.departureDay = (int)flight.departureDay;
-    }
-
-
     public int hashCode(){
         return (airline + number).hashCode();
     }
