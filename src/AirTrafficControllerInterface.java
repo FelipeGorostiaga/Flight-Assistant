@@ -24,7 +24,7 @@ public interface AirTrafficControllerInterface {
     RequestResult findRouteMinPriority(Airport origin, Airport destination,
                                       int priority, List<Integer> departureDays, RequestResult ret);
 
-    RequestResult worldTrip(List<Integer> departureDays, int priority);
+    RequestResult worldTrip(Airport origin,int priority,List<Integer> departureDays);
 
     /**
      * Receives flight insert instruccion from terminal
