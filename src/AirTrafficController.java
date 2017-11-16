@@ -378,7 +378,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
         return ret;
     }
     
-    public RequestResult worldTrip(Airport origin, int priority, List<Integer> departureDays) {
+     public RequestResult worldTrip(Airport origin, int priority, List<Integer> departureDays) {
 
         int size = airportList.size();
 
@@ -398,39 +398,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
                     rr.getDays().add(day);
 
                     WeekTime wt = new WeekTime(day,flight.getDepartureTime()); //dia y minuto en el que comienza la vuelta al mundo.
-                    wt.addMinutes(flight.getDuration());    //dia y minuto despues de tomar el primer vuelo
 
-                    worldTrip(flight.getDestination(),origin,size,wt,priority,rr,optimalResult);
-                }
-            }
-        }
-
-        return optimalResult;
-    }
-
-
-
-    public RequestResult worldTrip(Airport origin, int priority, List<Integer> departureDays) {
-
-        int size = airportList.size();
-
-        RequestResult optimalResult = new RequestResult();
-
-
-        for(Flight flight : origin.getFlights()) {
-            for(Integer day: flight.getDepartureDays()) {
-
-                if(departureDays.contains(day)) {
-
-                    RequestResult rr = new RequestResult();
-                    rr.setFlightTime(flight.getDuration());
-                    rr.setPrice(flight.getPrice());
-                    rr.setTotalTime(flight.getDuration());
-                    rr.getRoute().add(flight);
-                    rr.getDays().add(day);
-
-                    WeekTime wt = new WeekTime(day,flight.getDepartureTime()); //dia y minuto en el que comienza la vuelta al mundo.
-                    
                     wt.addMinutes(flight.getDuration());    //dia y minuto despues de tomar el primer vuelo
 
                     worldTrip(flight.getDestination(),origin,size-1,wt,priority,rr,optimalResult);
@@ -440,8 +408,6 @@ public class AirTrafficController implements AirTrafficControllerInterface {
 
         return optimalResult;
     }
-
-
 
     private void worldTrip(Airport current, Airport origin, int size, WeekTime wt, int priority, RequestResult result, RequestResult optimal ) {
 
