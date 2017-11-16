@@ -223,7 +223,8 @@ public class Terminal {
                             if(success) {
                                 System.out.println("Flight was successfully inserted");
                             } else {
-                                System.out.println("Flight could not be added. One or both airports may not be registered");
+                                System.out.println("Flight could not be added. Either the flight has already been added" +
+                                        "or any of airports are not registered");
                             }
                         } else {
                             System.out.println("Price format is invalid");
@@ -585,18 +586,20 @@ public class Terminal {
     }
 
     private void requestResultOutput(RequestResult rr) {
+        if(!rr.isSuccess()) {
+            System.out.println("We could not find any route for your requested departure and arival airports");
+            return;
+        }
         if (output.equals("stdout")) {
             if (format.equals("text")) {
                 routeTextStd(rr);
             } else {
-                  //KML to standard output  PATON
                 System.out.println(createKML(rr.getRoute()));
             }
         } else {
             if(format.equals("text")) {
                 routeTextFile(rr);
             } else {
-                //KML to file PATON
                 try {
                     BufferedWriter writer = new BufferedWriter(new FileWriter(output));
                     writer.write(createKML(rr.getRoute()));
@@ -665,8 +668,12 @@ public class Terminal {
         int firstDigit = -1;
         int secondDigit = -1;
         boolean hoursRead = false;
+        boolean minutesRead = false;
         char current;
         for(int i = 0; i<duration.length(); i++) {
+            if(minutesRead && hoursRead) {
+                return -1;
+            }
             current = duration.charAt(i);
             if(state == 0) {
                 if(Character.isDigit(current)) {
@@ -684,6 +691,9 @@ public class Terminal {
                     hoursRead = true;
                     minutes = buildMinutes(0, firstDigit, 60);
                     state = 0;
+                } else if(current == 'm' && i == duration.length() - 1 && firstDigit < 6) {
+                    minutes += buildMinutes(0, secondDigit, 1);
+                    minutesRead = true;
                 } else {
                     return -1;
                 }
@@ -694,12 +704,18 @@ public class Terminal {
                     state =0;
                 } else if(current == 'm' && i == duration.length() - 1 && firstDigit < 6) {
                     minutes += buildMinutes(firstDigit, secondDigit, 1);
+                    minutesRead = true;
                 } else {
                     return -1;
                 }
             }
         }
-        return minutes;
+        if(minutesRead && hoursRead) {
+            return minutes;
+        } else {
+            return -1;
+        }
+
     }
 
     private boolean isAValidAirlineName(String airline) {
