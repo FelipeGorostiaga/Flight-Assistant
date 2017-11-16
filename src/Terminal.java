@@ -218,6 +218,8 @@ public class Terminal {
                         Double doublePrice = validatePrice(price);
                         valid = valid && (time != -1) && (doublePrice != null);
                         if (valid) {
+                            System.out.println((String) words.get(2) + " " +(Integer) words.get(3) +" " +
+                                    dayList + " " +origin + " " +destination + " " +deptimeInt + " " +time + " " +doublePrice);
                             boolean success = atc.receiveFlightInsertion((String) words.get(2), (Integer) words.get(3),
                                     dayList, origin, destination, deptimeInt, time, doublePrice);
                             if(success) {
@@ -251,7 +253,8 @@ public class Terminal {
      */
     private void massiveValidation(char[] chars, int i, String item) {
         String file = getStringUntilChar(chars, i, ' ');
-        i += file.length() + 1;
+        i += file.length() + 1;;
+        System.out.println(file);
         String action = getStringUntilChar(chars, i, '\0');
         boolean fileIsValid = true;
         BufferedReader br = null;
@@ -330,8 +333,10 @@ public class Terminal {
             }
         }
         if(item.equals("airport")) {
+            System.out.println(lineChars);
             return newAirportValidation(lineChars, 0);
         } else {
+            System.out.println(lineChars);
             return newFlightValidation(lineChars, 0);
         }
 
