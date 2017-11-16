@@ -294,7 +294,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
             System.out.println( pqnode.flight + "Price " + pqnode.info[PRICE] + "TotalTIme "+ pqnode.info[TOTAL_TIME] + "FlightTime" + pqnode.info[FLIGHT_TIME]);
             System.out.println("DISTANCE " + pqnode.distance);
             Airport currentAirport = pqnode.flight.getDestination();
-            if(!currentAirport.isVisited() || priority == TOTAL_TIME){
+            if(!currentAirport.isVisited() || (priority == TOTAL_TIME && pqnode.flight.getOrigin().equals(pqnode.flight.getDestination().getOrigin() ))){
                 currentAirport.setOrigin(pqnode.flight.getOrigin());
                 currentAirport.setVisited(true);
                 if(currentAirport.equals(destination)){
