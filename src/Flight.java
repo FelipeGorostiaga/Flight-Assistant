@@ -40,6 +40,7 @@ public class Flight implements FlightInterface {
         this.departureTime = flight.departureTime;
         this.duration = flight.duration;
         this.origin = flight.origin;
+        this.departureDay = (int)flight.departureDay;
     }
 
 

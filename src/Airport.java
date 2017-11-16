@@ -102,32 +102,37 @@ public class Airport implements AirportInterface {
     /*optimized in the future*/
     public Integer getConnectionTime(Integer day, Flight arrival, Flight departure) {
         int aux = 0;
-        int start = arrival.getDuration() + arrival.getDepartureTime();
-        if (arrival.getDuration() + arrival.getDepartureTime() > DAY_TIME) {
+        /*check del dia de arribo*/
+        int arrivalTime = arrival.getDuration() + arrival.getDepartureTime();
+
+        while(arrivalTime >= DAY_TIME){
+            arrivalTime -= DAY_TIME;
             day++;
             if (day > 6) {
                 day = 0;
             }
-            start -= DAY_TIME;
         }
-        while (arrival.getDepartureDays().contains(day)) {
+
+        while (!departure.getDepartureDays().contains(day)) {
             day++;
             aux++;
             if (day > 6) {
                 day = 0;
             }
         }
+
+
         departure.setDepartureDay(day);
-        if (aux > 0) {
-            aux--;
-            return DAY_TIME - start + aux * DAY_TIME + departure.getDepartureTime();
-        } else {
-            if (start > departure.getDepartureTime()) {
-                return DAY_TIME - start + 6 * DAY_TIME + departure.getDepartureTime();
-            } else {
-                return departure.getDepartureTime() - start;
-            }
+        if(aux == 0){
+            if(arrivalTime > departure.getDepartureTime())
+                return DAY_TIME-arrivalTime + 6 * DAY_TIME + departure.getDepartureTime();
+            else
+                return departure.getDepartureTime() - arrivalTime;
         }
+        if(arrivalTime > departure.getDepartureTime()){
+            return aux * DAY_TIME - (arrivalTime - departure.getDepartureTime());
+        }
+        return aux * DAY_TIME + departure.getDepartureTime() - arrivalTime;
 
     }
 }
