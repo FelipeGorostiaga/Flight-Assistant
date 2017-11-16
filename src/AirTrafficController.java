@@ -264,6 +264,21 @@ public class AirTrafficController implements AirTrafficControllerInterface {
         }
         return ret;
     }
+    
+    public RequestResult receiveWorldTrip(String origin, String priority, List<Integer> weekDays) {
+
+        Airport start = airports.get(origin);
+
+        if(start == null) new RequestResult(); //con flag seteado en false.
+
+        switch(priority) {
+            case "ft": return worldTrip(start, FLIGHT_TIME, weekDays);
+            case "pr": return worldTrip(start, PRICE, weekDays);
+            case "tt": return worldTrip(start, TOTAL_TIME, weekDays);
+            default: throw new IllegalArgumentException("Not a valid priority");
+        }
+
+    }
 
 
     public boolean receiveFlightInsertion(String airline, int flightNum, List<Integer> weekDays, String origin, String destination,
@@ -354,41 +369,34 @@ public class AirTrafficController implements AirTrafficControllerInterface {
         return ret;
     }
     
-    public RequestResult worldTrip(List<Integer> departureDays, int priority) {
+    public RequestResult worldTrip(Airport origin, int priority, List<Integer> departureDays) {
 
         int size = airportList.size();
 
         RequestResult optimalResult = new RequestResult();
 
-        for(Airport airport : airportList) {
-            for(Flight flight : airport.getFlights()) {
-                for(Integer day : flight.getDepartureDays()) {
 
-                    if(departureDays.contains(day)) {
+        for(Flight flight : origin.getFlights()) {
+            for(Integer day: flight.getDepartureDays()) {
 
-                        RequestResult rr = new RequestResult();
+                if(departureDays.contains(day)) {
 
-                        rr.setFlightTime(flight.getDuration());
-                        rr.setPrice(flight.getPrice());
-                        rr.setTotalTime(flight.getDuration());
-                        rr.getRoute().add(0,flight);
+                    RequestResult rr = new RequestResult();
+                    rr.setFlightTime(flight.getDuration());
+                    rr.setPrice(flight.getPrice());
+                    rr.setTotalTime(flight.getDuration());
+                    rr.getRoute().add(flight);
+                    rr.getDays().add(day);
 
-                        WeekTime wt = new WeekTime(day,flight.getDepartureTime()); //dia y minuto en el que comienza la vuelta al mundo.
-                        wt.addMinutes(flight.getDuration());    //dia y minuto despues de tomar el primer vuelo
+                    WeekTime wt = new WeekTime(day,flight.getDepartureTime()); //dia y minuto en el que comienza la vuelta al mundo.
+                    wt.addMinutes(flight.getDuration());    //dia y minuto despues de tomar el primer vuelo
 
-                        worldTrip(flight.getDestination(), airport, size - 1, wt, priority, rr, optimalResult);
-                    }
+                    worldTrip(flight.getDestination(),origin,size,wt,priority,rr,optimalResult);
                 }
-
             }
         }
 
-        if(optimalResult.isSuccess())
-            return optimalResult;
-
-        else
-            return null; //No se encontro una vuelta al mundo valida.
-
+        return optimalResult;
     }
 
 
