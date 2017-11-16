@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -585,7 +586,7 @@ public class Terminal {
                 if(words.get(0).equals("findRoute")) {
                     rr = atc.receiveFindRoute((String)words.get(1), (String)words.get(2), (String)words.get(3),(ArrayList<Integer>)words.get(4));
                 } else if(words.get(0).equals("worldTrip")) {
-                    //rr = atc.receiveWorldTrip((String)words.get(1), (String)words.get(2), (ArrayList<Integer>)words.get(3));
+                    rr = atc.receiveWorldTrip((String)words.get(1), (String)words.get(2), (ArrayList<Integer>)words.get(3));
                 }
                 requestResultOutput(rr);
             }
@@ -626,6 +627,7 @@ public class Terminal {
         int totalHours = (int)rr.getTotalTime()/60;
         int flightMinutes = (int)rr.getFlightTime()%60;
         int flightHours = (int)rr.getFlightTime()/60;
+        Iterator<Integer> daysIt = rr.getDays().iterator();
         System.out.println("Your search was successful. Here is your itinerary:");
         System.out.println("");
         System.out.println("Total price: $" + rr.getPrice());
@@ -633,7 +635,22 @@ public class Terminal {
         System.out.println("Flight time: " + flightHours + " hours, " + flightMinutes + " minutes");
         System.out.println("Your route:");
         for(Flight flight: rr.getRoute()) {
-            System.out.println(flight.getOrigin().getName() + " ----> " + flight.getDestination().getName() + " (flying with " + flight.getAirline() + ")");
+            System.out.println(flight.getOrigin().getName() + " ----> " + flight.getDestination().getName() +
+                    " Flight: " + flight.getName() + ". Departure: " + day(daysIt.next()) + " at  " +
+                    flight.getDepartureTime()/60 + ":" +flight.getDepartureTime()%60);
+        }
+    }
+
+    private String day(int i) {
+        switch (i) {
+            case 0: return "Monday";
+            case 1: return "Tuesday";
+            case 2: return "Wednesday";
+            case 3: return "Thursday";
+            case 4: return "Friday";
+            case 5: return "Saturday";
+            case 6: return "Sunday";
+            default: return null;
         }
     }
 
@@ -648,6 +665,7 @@ public class Terminal {
         int totalHours = (int)rr.getTotalTime()/60;
         int flightMinutes = (int)rr.getFlightTime()%60;
         int flightHours = (int)rr.getFlightTime()/60;
+        Iterator<Integer> daysIt = rr.getDays().iterator();
         fileOutput.println("Your search was successful. Here is your itinerary:");
         fileOutput.println("");
         fileOutput.println("Total price: $" + rr.getPrice());
@@ -655,7 +673,9 @@ public class Terminal {
         fileOutput.println("Flight time: " + flightHours + " hours, " + flightMinutes + " minutes");
         fileOutput.println("Your route:");
         for(Flight flight: rr.getRoute()) {
-            fileOutput.println(flight.getOrigin() + " ----> " + flight.getDestination() + " (flying with " + flight.getAirline() + ")");
+            fileOutput.println(flight.getOrigin().getName() + " ----> " + flight.getDestination().getName() +
+                    " Flight: " + flight.getName() + ". Departure: " + day(daysIt.next()) + " at  " +
+                    flight.getDepartureTime()/60 + ":" +flight.getDepartureTime()%60);
         }
     }
 
