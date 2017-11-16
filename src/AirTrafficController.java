@@ -305,7 +305,8 @@ public class AirTrafficController implements AirTrafficControllerInterface {
                                                 int priority, List<Integer> departureDays, RequestResult ret) {
         PriorityQueue<PQNode> pq = new PriorityQueue<>();
         clearMarks();
-        origin.setVisited(true);
+        if(priority != TOTAL_TIME)
+            origin.setVisited(true);
           /*check if the route can be started on requested days*/
         for(Flight flight : origin.getFlights()){
             for(Integer day: departureDays){
@@ -324,14 +325,17 @@ public class AirTrafficController implements AirTrafficControllerInterface {
             System.out.println( pqnode.flight + "Price " + pqnode.info[PRICE] + "TotalTIme "+ pqnode.info[TOTAL_TIME] + "FlightTime" + pqnode.info[FLIGHT_TIME]);
             System.out.println("DISTANCE " + pqnode.distance);
             Airport currentAirport = pqnode.flight.getDestination();
-            if(!currentAirport.isVisited() || (priority == TOTAL_TIME && pqnode.flight.getOrigin().equals(pqnode.flight.getDestination().getOrigin() ))){
+            if(!currentAirport.isVisited()){
                 currentAirport.setOrigin(pqnode.flight.getOrigin());
-                currentAirport.setVisited(true);
+                if(priority == TOTAL_TIME)
+                    pqnode.flight.getOrigin().setVisited(true);
+                else
+                    currentAirport.setVisited(true);
                 if(currentAirport.equals(destination)){
                     return routePlanner(pqnode, origin, ret);
                 }
                 for(Flight flight : currentAirport.getFlights()){
-                    if(!flight.getDestination().isVisited() || (priority == TOTAL_TIME && flight.getOrigin().equals(flight.getDestination().getOrigin()))){
+                    if(!flight.getDestination().isVisited()){
                         /*gets time waiting for connection*/
                         Integer waitingTime = currentAirport.getConnectionTime(pqnode.flight.getDepartureDay(), pqnode.flight, flight);
                         /*inserts Priority Queue Node with copy of flight */
