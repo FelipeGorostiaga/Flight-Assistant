@@ -27,17 +27,16 @@ public class RequestResult {
 
     }
 
-    public RequestResult clone() {
+     public void cloneRR(RequestResult result) {
 
-        RequestResult ret = new RequestResult();
+        this.setTotalTime(result.getTotalTime());
+        this.setFlightTime(result.getFlightTime());
+        this.setPrice(result.getPrice());
+        this.setSuccess(true);
 
-        List<Flight> flightList = new LinkedList<Flight>(this.getRoute());
-        List<Integer> daysList = new LinkedList<Integer>(this.getDays());
-        ret.setPrice(this.getPrice());
-        ret.setFlightTime(this.flightTime);
-        ret.setTotalTime(this.totalTime);
+        this.setRoute(new LinkedList<Flight>(result.getRoute()));
+        this.setDays(new LinkedList<Integer>(result.getDays()));
 
-        return ret;
     }
 
     public void addData(double price, int fduration, int ttime) {
