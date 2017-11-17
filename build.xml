@@ -1,12 +1,15 @@
 <project name="Sample" default="compile" basedir=".">
   <target name="compile">
+  	<mkdir dir="doc"/>
+  	<mkdir dir="bin"/>
     <javac srcdir="src" destdir="bin"/>
-  </target>
-  <jar destfile="tp2eda.jar" basedir="bin">
+    <jar destfile="tp2eda.jar" basedir="bin">
     <manifest>
       <attribute name="Main-Class" value="Main"/>
     </manifest>
   </jar>
+  </target>
+ 
   <target name="doc" depends="compile">
     <javadoc destdir="doc">
       <fileset dir="src"/>

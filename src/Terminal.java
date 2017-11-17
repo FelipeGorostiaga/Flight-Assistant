@@ -305,14 +305,13 @@ public class Terminal {
                 } else if (type.equals("flight")) {
                     System.out.print("Line " + lineNumber+ ": ");
                     lineProcessing(line, type);
-                    lineNumber++;
+                    
                 }
+                lineNumber++;
             }
         } catch (IOException e) {
             System.out.println("Aborting. Unexpected input/output exception");
         }
-        atc.printAirports();
-        atc.printFlights();
     }
 
     /**
@@ -520,6 +519,7 @@ public class Terminal {
         i += fmt.length() + 1;
         if(fmt.equals("KML") || fmt.equals("text")) {
             words.add(fmt);
+            format = fmt;
             checkOutput(chars, i);
         } else {
             System.out.println("Invalid output format");
