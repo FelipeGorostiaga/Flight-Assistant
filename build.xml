@@ -8,7 +8,9 @@
     </manifest>
   </jar>
   <target name="doc" depends="compile">
-    <javadoc sourcepath="src" destdir="doc"/>
+    <javadoc destdir="doc">
+      <fileset dir="src"/>
+    </javadoc>
   </target>
   <target name= "clean">
     <delete>
@@ -17,5 +19,10 @@
      </fileset>
     </delete>
     <delete file="tp2eda.jar" />
+    <delete>
+     <fileset dir="doc">
+        <include name="*"/>
+     </fileset>
+    </delete>
   </target>
 </project>
