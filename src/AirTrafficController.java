@@ -442,7 +442,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
                             worldTrip(flight.getDestination(), origin, size - 1, dayAfterFlight, priority, result, optimal);
 
                             result.getRoute().remove(flight); //Backtracking
-                            result.getDays().remove(day);
+                            result.getDays().remove(result.getDays().size() - 1);
                             result.removeData(flight.getPrice(), flight.getDuration(), cantMin);
 
                         }
