@@ -271,7 +271,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
 
         Airport start = airports.get(origin);
 
-        if(start == null) new RequestResult(); //con flag seteado en false.
+        if(start == null) return new RequestResult(); //con flag seteado en false.
 
         switch(priority) {
             case "ft": return worldTrip(start, FLIGHT_TIME, weekDays);
@@ -381,7 +381,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
      public RequestResult worldTrip(Airport origin, int priority, List<Integer> departureDays) {
 
         int size = airportList.size();
-
+        clearMarks();
         RequestResult optimalResult = new RequestResult();
 
 

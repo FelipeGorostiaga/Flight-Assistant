@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Flight</name>
+	<open>1</open>
+	<Folder>
+		<name>Flights</name>
+		<open>1</open>
+		<Style id="sn_noicon">
+			<IconStyle>
+				<Icon></Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00ffffff</color>
+			</LabelStyle>
+		</Style>
+		<Style id="yellowLineGreenPoly">
+			<LineStyle>
+				<color>7f00ffff</color>
+ 				<width>4</width>
+			</LineStyle>
+ 			<PolyStyle>
+ 				<color>7f00ff00</color>
+ 			</PolyStyle>
+		</Style>
+		<Camera id="ID"> 
+  			<gx:ViewerOptions>
+    			<option> name=" " type="boolean"></option>
+  			</gx:ViewerOptions>
+  			<longitude>10.0</longitude>
+  			<latitude>10.0</latitude>
+  			<altitude>5000.00</altitude>
+  			<heading>0</heading>
+  			<tilt>0</tilt>
+  			<roll>0</roll>
+  			<altitudeMode>relativeToGround</altitudeMode>
+		</Camera>
+		<Placemark id="flight0">
+				<name>AAA AA1112</name>
+				<description> Destination: DDD Departure: Lu 945 Flight time: 10h00m</description>
+				<LookAt>
+					<longitude>10.0</longitude>
+					<latitude>10.0</latitude>
+					<altitude>0</altitude>
+					<heading>0</heading>
+					<tilt>0</tilt>
+					<range>518.7551361289096</range>
+					<altitudeMode>relativeToGround</altitudeMode>
+				</LookAt>
+				<styleUrl>#sn_noicon</styleUrl>
+				<Point>
+					<coordinates>10.0,10.0,0</coordinates>
+				</Point>
+				<gx:balloonVisibility>1</gx:balloonVisibility>
+		</Placemark>
+		<Placemark id="flight1">
+				<name>DDD AA1113</name>
+				<description> Destination: FFF Departure: Sa 360 Flight time: 8h20m</description>
+				<LookAt>
+					<longitude>40.0</longitude>
+					<latitude>40.0</latitude>
+					<altitude>0</altitude>
+					<heading>0</heading>
+					<tilt>0</tilt>
+					<range>518.7551361289096</range>
+					<altitudeMode>relativeToGround</altitudeMode>
+				</LookAt>
+				<styleUrl>#sn_noicon</styleUrl>
+				<Point>
+					<coordinates>40.0,40.0,0</coordinates>
+				</Point>
+				<gx:balloonVisibility>0</gx:balloonVisibility>
+		</Placemark>
+		<Placemark id="flight2">
+				<name>FFF AA1114</name>
+				<description> Destination: GGG Departure: Lu 1005 Flight time: 3h45m</description>
+				<LookAt>
+					<longitude>60.0</longitude>
+					<latitude>60.0</latitude>
+					<altitude>0</altitude>
+					<heading>0</heading>
+					<tilt>0</tilt>
+					<range>518.7551361289096</range>
+					<altitudeMode>relativeToGround</altitudeMode>
+				</LookAt>
+				<styleUrl>#sn_noicon</styleUrl>
+				<Point>
+					<coordinates>60.0,60.0,0</coordinates>
+				</Point>
+				<gx:balloonVisibility>0</gx:balloonVisibility>
+		</Placemark>
+		<Placemark id="flight3">
+				<name>GGG AA1116</name>
+				<description> Destination: EEE Departure: Lu 480 Flight time: 10h00m</description>
+				<LookAt>
+					<longitude>70.0</longitude>
+					<latitude>70.0</latitude>
+					<altitude>0</altitude>
+					<heading>0</heading>
+					<tilt>0</tilt>
+					<range>518.7551361289096</range>
+					<altitudeMode>relativeToGround</altitudeMode>
+				</LookAt>
+				<styleUrl>#sn_noicon</styleUrl>
+				<Point>
+					<coordinates>70.0,70.0,0</coordinates>
+				</Point>
+				<gx:balloonVisibility>0</gx:balloonVisibility>
+		</Placemark>
+		<Placemark id="flight4">
+				<name>EEE AA1133</name>
+				<description> Destination: HHH Departure: Lu 540 Flight time: 3h00m</description>
+				<LookAt>
+					<longitude>50.0</longitude>
+					<latitude>50.0</latitude>
+					<altitude>0</altitude>
+					<heading>0</heading>
+					<tilt>0</tilt>
+					<range>518.7551361289096</range>
+					<altitudeMode>relativeToGround</altitudeMode>
+				</LookAt>
+				<styleUrl>#sn_noicon</styleUrl>
+				<Point>
+					<coordinates>50.0,50.0,0</coordinates>
+				</Point>
+				<gx:balloonVisibility>0</gx:balloonVisibility>
+		</Placemark>
+		<Placemark id="flightEnd">
+				<name>HHH</name>
+				<description>End!</description>
+				<LookAt>
+					<longitude>80.0</longitude>
+					<latitude>80.0</latitude>
+					<altitude>0</altitude>
+					<heading>0</heading>
+					<tilt>0</tilt>
+					<range>518.7551361289096</range>
+					<altitudeMode>relativeToGround</altitudeMode>
+				</LookAt>
+				<styleUrl>#sn_noicon</styleUrl>
+				<Point>
+					<coordinates>80.0,80.0,0</coordinates>
+				</Point>
+				<gx:balloonVisibility>0</gx:balloonVisibility>
+		</Placemark>
+		<Placemark>
+ 			<name>route</name>
+ 			<description></description>
+ 			<styleUrl>#yellowLineGreenPoly</styleUrl>
+ 			<LineString>
+ 				<extrude>1</extrude>
+ 				<tessellate>1</tessellate>
+ 				<altitudeMode>absoluto</altitudeMode>
+ 				<coordinates>
+					10.0,10.0,0
+					40.0,40.0,0
+					60.0,60.0,0
+					70.0,70.0,0
+					50.0,50.0,0
+					80.0,80.0,0
+				</coordinates>
+			</LineString>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>
