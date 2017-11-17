@@ -675,6 +675,7 @@ public class Terminal {
                     " Flight: " + flight.getName() + ". Departure: " + day(daysIt.next()) + " at  " +
                     flight.getDepartureTime()/60 + ":" +flight.getDepartureTime()%60);
         }
+        fileOutput.close();
     }
 
     private boolean isADayTime(String date) {

@@ -1,0 +1,12 @@
+Your search was successful. Here is your itinerary:
+
+Total price: $1307.0
+Total time: 506 hours, 0 minutes
+Flight time: 37 hours, 5 minutes
+Your route:
+AAA ----> DDD Flight: AA1112. Departure: Monday at  15:45
+DDD ----> FFF Flight: AA1113. Departure: Saturday at  6:0
+FFF ----> GGG Flight: AA1114. Departure: Monday at  16:45
+GGG ----> EEE Flight: AA1116. Departure: Monday at  8:0
+EEE ----> HHH Flight: AA1133. Departure: Monday at  9:0
+HHH ----> III Flight: AA1122. Departure: Monday at  15:45
