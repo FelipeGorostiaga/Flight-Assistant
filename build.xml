@@ -1,0 +1,21 @@
+<project name="Sample" default="compile" basedir=".">
+  <target name="compile">
+    <javac srcdir="src" destdir="bin"/>
+  </target>
+  <jar destfile="tp2eda.jar" basedir="bin">
+    <manifest>
+      <attribute name="Main-Class" value="Main"/>
+    </manifest>
+  </jar>
+  <target name="doc" depends="compile">
+    <javadoc sourcepath="src" destdir="doc"/>
+  </target>
+  <target name= "clean">
+    <delete>
+     <fileset dir="bin">
+        <include name="*"/>
+     </fileset>
+    </delete>
+    <delete file="tp2eda.jar" />
+  </target>
+</project>

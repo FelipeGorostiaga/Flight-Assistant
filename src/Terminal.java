@@ -300,15 +300,13 @@ public class Terminal {
         try{
             while((line=br.readLine())!=null) {
                 if (type.equals("airport")) {
-                    lineIsValid = lineProcessing(line, type);
-                } else if(type.equals("flight")) {
-                    lineIsValid = lineProcessing(line, type);
+                    System.out.print("Line " + lineNumber+": ");
+                    lineProcessing(line, type);
+                } else if (type.equals("flight")) {
+                    System.out.print("Line " + lineNumber+ ": ");
+                    lineProcessing(line, type);
+                    lineNumber++;
                 }
-                if(!lineIsValid) {
-                    System.out.println("Line " + lineNumber + " could not be added " +
-                            "because it has an invalid format");
-                }
-                lineNumber++;
             }
         } catch (IOException e) {
             System.out.println("Aborting. Unexpected input/output exception");
