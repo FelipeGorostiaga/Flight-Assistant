@@ -402,6 +402,7 @@ public class AirTrafficController implements AirTrafficControllerInterface {
                     wt.addMinutes(flight.getDuration());    //dia y minuto despues de tomar el primer vuelo
 
                     worldTrip(flight.getDestination(),origin,size-1,wt,priority,rr,optimalResult);
+                    if(priority != TOTAL_TIME)break;
                 }
             }
         }
