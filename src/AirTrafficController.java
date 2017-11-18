@@ -322,9 +322,6 @@ public class AirTrafficController implements AirTrafficControllerInterface {
         }
         while(!pq.isEmpty()){
             PQNode pqnode = pq.poll();
-           // System.out.println("-------------Priority " + pqnode.priority + "Flight ");
-           // System.out.println( pqnode.flight + "Price " + pqnode.info[PRICE] + "TotalTIme "+ pqnode.info[TOTAL_TIME] + "FlightTime" + pqnode.info[FLIGHT_TIME]);
-           // System.out.println("DISTANCE " + pqnode.distance);
             Airport currentAirport = pqnode.flight.getDestination();
             if(!currentAirport.isVisited()){
                 currentAirport.setOrigin(pqnode.flight.getOrigin());
