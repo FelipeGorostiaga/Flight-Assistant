@@ -1,4 +1,5 @@
-# AirTrafficControllerInterface
-Aplicación
 
-# La estructura es una Lista de tipo Aeropuerto (LinkedList<AirportInterface>) donde cada Aeropuerto tiene una lista de vuelos
+	El trabajo práctico proponía la implementación de una aplicación que actúa como asistente de armado de vuelos. Las funcionalidades básicas son: 
+“ ● Mantenimiento de la información de aeropuertos y vuelos.
+  ● Generación de una ruta óptima entre dos ciudades.
+  ● Generación de una ruta para recorrer el mundo.   ”
