@@ -635,7 +635,8 @@ public class Terminal {
         for(Flight flight: rr.getRoute()) {
             System.out.println(flight.getOrigin().getName() + " ----> " + flight.getDestination().getName() +
                     " Flight: " + flight.getName() + ". Departure: " + day(daysIt.next()) + " at  " +
-                    flight.getDepartureTime()/60 + ":" +flight.getDepartureTime()%60);
+                    ((flight.getDepartureTime()/60 < 10)? "0"+ flight.getDepartureTime()/60:flight.getDepartureTime()/60) + ":" +
+                    ((flight.getDepartureTime()%60 < 10)? "0" + flight.getDepartureTime()%60:flight.getDepartureTime()%60));
         }
     }
 
